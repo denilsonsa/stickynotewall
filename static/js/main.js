@@ -1,6 +1,6 @@
 // JSLint comments:
-/*global document, window */
-/*jslint white: true, onevar: false, undef: true, newcap: true, nomen: true, regexp: true, bitwise: true, maxerr: 50, maxlen: 78, indent: 4 */
+/*global document, window, XMLHttpRequest */
+/*jslint sloppy: true, white: true, onevar: false, plusplus: true, maxerr: 50, maxlen: 78, indent: 4 */
 
 
 var XHR_instance;
@@ -51,7 +51,7 @@ function load_from_ajax() {
 	}
 
 	XHR_instance.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) {
+		if (this.readyState === 4 && this.status === 200) {
 			var json_obj = JSON.parse(this.responseText);
 
 			clear_wall();
@@ -68,12 +68,12 @@ function load_from_ajax() {
 function on_load_handler() {
 	var button = document.getElementById('load_from_ajax_button');
 	if (button) {
-		button.addEventListener('click', load_from_ajax, false)
+		button.addEventListener('click', load_from_ajax, false);
 	}
 
 	button = document.getElementById('clear_wall');
 	if (button) {
-		button.addEventListener('click', clear_wall, false)
+		button.addEventListener('click', clear_wall, false);
 	}
 }
 
