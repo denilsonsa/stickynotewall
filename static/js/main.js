@@ -24,6 +24,8 @@ function new_note_element(obj) {
 	note_div.style.height = obj.height + 'px';
 	note_div.style.zIndex = obj.z;
 
+	note_div.addEventListener('dragstart', dragstart_experiment, false);
+
 	var text_div = document.createElement('div');
 	text_div.setAttribute('class', 'text');
 
@@ -66,11 +68,21 @@ function load_from_ajax() {
 }
 
 
+function dragstart_experiment(ev) {
+	console.log("dragstart", this, ev);
+}
+function dragenter_experiment(ev) {
+	console.log("dragenter", this, ev);
+}
+
+
 function accepting_drag(ev) {
 	ev.preventDefault();
 }
 
 function drop_experiment(ev) {
+	ev.preventDefault();
+
 	var tmp = document.createElement('div');
 	var rect = this.getBoundingClientRect();
 	var left = ev.clientX - rect.left - this.clientLeft;
@@ -95,6 +107,7 @@ function on_load_handler() {
 
 	var wall = document.getElementsByClassName('wall')[0];
 	wall.addEventListener('dragover', accepting_drag, false);
+	wall.addEventListener('dragenter', dragenter_experiment, false);
 	wall.addEventListener('drop', drop_experiment, false);
 }
 
