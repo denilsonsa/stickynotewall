@@ -18,6 +18,10 @@ def get_path(*args):
     return os.path.join(os.path.dirname(__file__), *args)
 
 
+#class User(db.Model):
+#    user = db.UserProperty()
+
+
 class StickyNote(db.Model):
     user = db.UserProperty()
 
@@ -46,12 +50,15 @@ class BaseHandler(webapp.RequestHandler):
 
         self.logout_url = users.create_logout_url(self.request.uri)
 
+    def get_ancestor(self):
+        return db.Key.from_path('User', self.user.email())
+
 
 class MainPage(BaseHandler):
     def get(self):
         self.requires_login()
 
-        notes = StickyNote.all().filter('user =', self.user) 
+        notes = StickyNote.all().ancestor(self.get_ancestor()).filter('user =', self.user)
 
         template_values = {
             'user': self.user,
@@ -68,6 +75,7 @@ class AddNote(BaseHandler):
         self.requires_login()
 
         note = StickyNote(
+            parent=self.get_ancestor(),
             user=self.user,
 
             text=self.request.get('text'),
