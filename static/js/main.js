@@ -16,6 +16,7 @@ function clear_wall() {
 
 function new_note_element(obj) {
 	var note_div = document.createElement('div');
+	note_div.setAttribute('draggable', 'true');
 	note_div.setAttribute('class', 'note');
 	note_div.style.left = obj.x + 'px';
 	note_div.style.top = obj.y + 'px';
@@ -65,6 +66,20 @@ function load_from_ajax() {
 }
 
 
+function accepting_drag(ev) {
+	ev.preventDefault();
+}
+
+function drop_experiment(ev) {
+	var tmp = document.createElement('div');
+	var rect = this.getBoundingClientRect();
+	var left = ev.clientX - rect.left - this.clientLeft;
+	var top = ev.clientY - rect.top - this.clientTop;
+	tmp.setAttribute('style', 'position:absolute; width: 2px; height: 2px; top: '+top+'px; left: '+left+'px; background: red;');
+	this.appendChild(tmp);
+}
+
+
 function on_load_handler() {
 	var button = document.getElementById('load_from_ajax_button');
 	if (button) {
@@ -75,6 +90,12 @@ function on_load_handler() {
 	if (button) {
 		button.addEventListener('click', clear_wall, false);
 	}
+
+
+
+	var wall = document.getElementsByClassName('wall')[0];
+	wall.addEventListener('dragover', accepting_drag, false);
+	wall.addEventListener('drop', drop_experiment, false);
 }
 
 window.addEventListener('load', on_load_handler, false);
