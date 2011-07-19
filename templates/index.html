@@ -22,7 +22,7 @@
 		width: {{ note.width }}px;
 		height: {{ note.height }}px;
 		z-index: {{ note.z }};
-		" data:id="{{ note.key.id_or_name }}"
+		" data:id="{{ note.key.id }}"
 	>
 		<form action="/delete_note" method="POST"><input type="hidden" name="id" value="{{ note.key.id }}"><input type="submit" value="X"></form>
 		{{ note.text|escape }}
@@ -45,8 +45,8 @@
 	</div>
 
 	<div>
-		<input type="number" name="width" min="100"> x 
-		<input type="number" name="height" min="100">
+		<input type="number" name="width" min="50"> x 
+		<input type="number" name="height" min="50">
 	</div>
 	<div>
 		<input type="submit">

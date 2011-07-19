@@ -2,7 +2,13 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4 sw=4 et
 
+import datetime
 import os.path
+
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 from google.appengine.ext import db
 from google.appengine.api import users
@@ -10,6 +16,40 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext.webapp.util import login_required
+
+
+class ExtensibleJSONEncoder(json.JSONEncoder):
+    '''If an object has a .to_json() method, calls it.
+
+    Also implements support for iterables and datetime/date/time.
+    '''
+
+    def default(self, obj):
+        # Support for .to_json() method in arbitrary objects
+        if hasattr(obj, 'to_json'):
+            method = getattr(obj, 'to_json')
+            if callable(method):
+                return method()
+
+        # Support for datetime, date, time
+        if isinstance(obj, datetime.datetime):
+            return obj.strftime('%Y-%m-%d %H:%M:%S')
+        elif isinstance(obj, datetime.date):
+            return obj.strftime('%Y-%m-%d')
+        elif isinstance(obj, datetime.time):
+            return obj.strftime('%H:%M:%S')
+
+        # Support for iterables. Code from:
+        # http://docs.python.org/library/json.html#json.JSONEncoder.default
+        try:
+            iterable = iter(obj)
+        except TypeError:
+            pass
+        else:
+            return list(iterable)
+
+        # Fallback
+        return json.JSONEncoder.default(self, obj)
 
 
 def get_path(*args):
@@ -39,6 +79,13 @@ class StickyNote(db.Model):
     creation_datetime = db.DateTimeProperty(auto_now_add=True)
     last_modified_datetime = db.DateTimeProperty(auto_now=True)
 
+    def to_json(self):
+        d = {}
+        d['id'] = self.key().id()
+        for attr in ['text', 'x', 'y', 'z', 'width', 'height', 'creation_datetime', 'last_modified_datetime']:
+            d[attr] = getattr(self, attr)
+        return d
+
 
 class BaseHandler(webapp.RequestHandler):
     def requires_login(self):
@@ -49,6 +96,11 @@ class BaseHandler(webapp.RequestHandler):
             self.redirect(users.create_login_url(self.request.uri))
 
         self.logout_url = users.create_logout_url(self.request.uri)
+
+    def return_json(self, obj):
+        '''Convenience function that generates and writes JSON output.'''
+
+        json.dump(obj, cls=ExtensibleJSONEncoder, fp=self.response.out)
 
     def get_ancestor(self):
         return db.Key.from_path('User', self.user.email())
@@ -68,6 +120,15 @@ class MainPage(BaseHandler):
         path = get_path('templates', 'index.html')
 
         self.response.out.write(template.render(path, template_values))
+
+
+class GetNotes(BaseHandler):
+    def get(self):
+        self.requires_login()
+
+        notes = StickyNote.all().ancestor(self.get_ancestor()).filter('user =', self.user)
+
+        self.return_json(notes)
 
 
 class AddNote(BaseHandler):
@@ -114,6 +175,7 @@ class DeleteNote(BaseHandler):
 application = webapp.WSGIApplication(
     [
         ('/', MainPage),
+        ('/ajax/get_notes', GetNotes),
         ('/add_note', AddNote),
         ('/delete_note', DeleteNote),
     ],
