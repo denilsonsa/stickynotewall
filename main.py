@@ -85,10 +85,30 @@ class AddNote(BaseHandler):
         self.redirect('/')
 
 
+class DeleteNote(BaseHandler):
+    def post(self):
+        self.requires_login()
+
+        id = int(self.request.get('id'))
+        key = db.Key.from_path('StickyNote', id)
+        note = StickyNote.get(key)
+
+        if note is None:
+            self.error(404)
+            return
+        elif note.user != self.user:
+            self.error(403)
+            return
+
+        note.delete()
+        self.redirect('/')
+
+
 application = webapp.WSGIApplication(
     [
         ('/', MainPage),
         ('/add_note', AddNote),
+        ('/delete_note', DeleteNote),
     ],
     debug=True
 )

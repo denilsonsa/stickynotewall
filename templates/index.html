@@ -22,7 +22,11 @@
 		width: {{ note.width }}px;
 		height: {{ note.height }}px;
 		z-index: {{ note.z }};
-	" data:id="{{ note.key.id_or_name }}">{{ note.text|escape }}</div>
+		" data:id="{{ note.key.id_or_name }}"
+	>
+		<form action="/delete_note" method="POST"><input type="hidden" name="id" value="{{ note.key.id }}"><input type="submit" value="X"></form>
+		{{ note.text|escape }}
+	</div>
 
 {% endfor %}
 </div>
