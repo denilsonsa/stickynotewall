@@ -88,14 +88,9 @@ class StickyNote(db.Model):
 
 
 class BaseHandler(webapp.RequestHandler):
-    def requires_login(self):
-        '''Redirects the user to the login page, if needed.'''
-
-        self.user = users.get_current_user()
-        if not self.user:
-            self.redirect(users.create_login_url(self.request.uri))
-
-        self.logout_url = users.create_logout_url(self.request.uri)
+    @property
+    def logout_url(self):
+        return users.create_logout_url(self.request.uri)
 
     def return_json(self, obj):
         '''Convenience function that generates and writes JSON output.'''
@@ -103,17 +98,15 @@ class BaseHandler(webapp.RequestHandler):
         json.dump(obj, cls=ExtensibleJSONEncoder, fp=self.response.out)
 
     def get_ancestor(self):
-        return db.Key.from_path('User', self.user.email())
+        return db.Key.from_path('User', users.get_current_user().email())
 
 
 class MainPage(BaseHandler):
     def get(self):
-        self.requires_login()
-
-        notes = StickyNote.all().ancestor(self.get_ancestor()).filter('user =', self.user)
+        notes = StickyNote.all().ancestor(self.get_ancestor())
 
         template_values = {
-            'user': self.user,
+            'user': users.get_current_user(),
             'logout_url': self.logout_url,
             'notes': notes,
         }
@@ -124,20 +117,16 @@ class MainPage(BaseHandler):
 
 class GetNotes(BaseHandler):
     def get(self):
-        self.requires_login()
-
-        notes = StickyNote.all().ancestor(self.get_ancestor()).filter('user =', self.user)
+        notes = StickyNote.all().ancestor(self.get_ancestor())
 
         self.return_json(notes)
 
 
 class AddNote(BaseHandler):
     def post(self):
-        self.requires_login()
-
         note = StickyNote(
             parent=self.get_ancestor(),
-            user=self.user,
+            user=users.get_current_user(),
 
             text=self.request.get('text'),
 
@@ -156,15 +145,13 @@ class AddNote(BaseHandler):
 
 class DeleteNote(BaseHandler):
     def post(self):
-        self.requires_login()
-
         id = int(self.request.get('id'))
         note = StickyNote.get_by_id(id, parent=self.get_ancestor())
 
         if note is None:
             self.error(404)
             return
-        elif note.user != self.user:
+        elif note.user != users.get_current_user():
             self.error(403)
             return
 
