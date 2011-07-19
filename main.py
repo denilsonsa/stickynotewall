@@ -98,8 +98,7 @@ class DeleteNote(BaseHandler):
         self.requires_login()
 
         id = int(self.request.get('id'))
-        key = db.Key.from_path('StickyNote', id)
-        note = StickyNote.get(key)
+        note = StickyNote.get_by_id(id, parent=self.get_ancestor())
 
         if note is None:
             self.error(404)
