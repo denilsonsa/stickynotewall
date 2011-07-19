@@ -15,3 +15,10 @@ handlers:
 
 - url: /.*
   script: main.py
+  secure: always
+
+# http://code.google.com/appengine/docs/python/config/appconfig.html#Builtin_Handlers
+builtins:
+- datastore_admin: on
+- appstats: on
+- admin_redirect: on
