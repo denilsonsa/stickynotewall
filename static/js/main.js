@@ -3,6 +3,28 @@
 /*jslint sloppy: true, white: true, onevar: false, plusplus: true, maxerr: 50, maxlen: 78, indent: 4 */
 
 
+// document.querySelectorAll()
+// http://www.w3.org/TR/selectors-api/
+// https://developer.mozilla.org/En/DOM/Document.querySelectorAll
+//
+// window.XMLHttpRequest
+// http://www.w3.org/TR/XMLHttpRequest/
+// https://developer.mozilla.org/en/xmlhttprequest
+// https://developer.mozilla.org/En/Using_XMLHttpRequest
+//
+// Element.getBoundingClientRect(), Element.clientLeft, Element.clientTop
+// http://www.w3.org/TR/cssom-view/#extensions-to-the-element-interface
+// https://developer.mozilla.org/en/DOM/element.getBoundingClientRect
+//
+// MouseEvent.clientX, MouseEvent.clientY
+// http://www.w3.org/TR/2000/REC-DOM-Level-2-Events-20001113/events.html#Events-eventgroupings-mouseevents
+// https://developer.mozilla.org/en/DOM/Event/UIEvent/MouseEvent
+//
+// Drag and drop
+// https://developer.mozilla.org/En/DragDrop/Drag_Operations
+// http://www.html5rocks.com/en/tutorials/dnd/basics/
+
+
 var XHR_instance;
 
 
