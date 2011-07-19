@@ -1,0 +1,17 @@
+# The application name:
+application: notewall
+# The application version:
+version: 1
+# The runtime environment and version:
+runtime: python
+api_version: 1
+
+handlers:
+- url: /css
+  static_dir: static/css
+
+- url: /js
+  static_dir: static/js
+
+- url: /.*
+  script: main.py
