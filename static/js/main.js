@@ -31,6 +31,9 @@
 // https://developer.mozilla.org/En/DragDrop/Drag_Operations
 // https://developer.mozilla.org/En/DragDrop/DataTransfer
 // http://www.html5rocks.com/en/tutorials/dnd/basics/
+//
+// Custom data-* attributes
+// http://dev.w3.org/html5/spec/elements.html#embedding-custom-non-visible-data-with-the-data-attributes
 
 
 var XHR_instance;
