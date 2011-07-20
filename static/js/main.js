@@ -28,6 +28,7 @@
 //
 // Drag and drop
 // http://dev.w3.org/html5/spec/dnd.html
+// http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#dnd
 // https://developer.mozilla.org/En/DragDrop/Drag_Operations
 // https://developer.mozilla.org/En/DragDrop/DataTransfer
 // http://www.html5rocks.com/en/tutorials/dnd/basics/
