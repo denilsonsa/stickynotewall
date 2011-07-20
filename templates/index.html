@@ -11,7 +11,7 @@
 </head>
 <body>
 
-<div class="logout"><a href="{{ logout_url }}">Logout</a></div>
+<div class="logout"><a href="{{ logout_url }}">Logout</a> from <em>{{ user.nickname }}</em></div>
 
 <div class="wall">
 {% for note in notes %}
