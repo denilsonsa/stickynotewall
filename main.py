@@ -156,13 +156,39 @@ class DeleteNote(BaseHandler):
             return
 
         note.delete()
-        self.redirect('/')
+
+        # return nothing
+
+
+class MoveNote(BaseHandler):
+    def post(self):
+        id = int(self.request.get('id'))
+        x = int(self.request.get('x'))
+        y = int(self.request.get('y'))
+        z = int(self.request.get('z'))
+
+        note = StickyNote.get_by_id(id, parent=self.get_ancestor())
+
+        if note is None:
+            self.error(404)
+            return
+        elif note.user != users.get_current_user():
+            self.error(403)
+            return
+
+        note.x = x
+        note.y = y
+        note.z = z
+        note.put()
+
+        self.return_json(note)
 
 
 application = webapp.WSGIApplication(
     [
         ('/', MainPage),
         ('/ajax/get_notes', GetNotes),
+        ('/ajax/move_note', MoveNote),
         ('/add_note', AddNote),
         ('/delete_note', DeleteNote),
     ],

@@ -12,6 +12,12 @@
 // https://developer.mozilla.org/en/xmlhttprequest
 // https://developer.mozilla.org/En/Using_XMLHttpRequest
 //
+// FormData
+// http://dev.w3.org/2006/webapi/XMLHttpRequest-2/#the-formdata-interface
+// https://developer.mozilla.org/en/XMLHttpRequest/FormData
+// https://developer.mozilla.org/En/XMLHttpRequest/Using_XMLHttpRequest#Using_FormData_objects
+// http://hacks.mozilla.org/2010/07/firefox-4-formdata-and-the-new-file-url-object/
+//
 // Element.getBoundingClientRect(), Element.clientLeft, Element.clientTop
 // http://www.w3.org/TR/cssom-view/#extensions-to-the-element-interface
 // https://developer.mozilla.org/en/DOM/element.getBoundingClientRect
@@ -87,6 +93,27 @@ function load_from_ajax() {
 
 	XHR_instance.open('GET', '/ajax/get_notes');
 	XHR_instance.send();
+}
+
+function move_note_ajax_post(id, x, y, z) {
+	var XHR = new XMLHttpRequest();
+	var formdata = new FormData();
+
+	formdata.append('id', id);
+	formdata.append('x', x);
+	formdata.append('y', y);
+	formdata.append('z', z);
+
+	XHR.onreadystatechange = function() {
+		if (this.readyState === 4 && this.status === 200) {
+			var json_obj = JSON.parse(this.responseText);
+			// TODO: implement me...
+		}
+		// else... do nothing
+	}
+
+	XHR.open('POST', '/ajax/move_note');
+	XHR.send(formdata);
 }
 
 
