@@ -27,7 +27,9 @@
 // https://developer.mozilla.org/en/DOM/Event/UIEvent/MouseEvent
 //
 // Drag and drop
+// http://dev.w3.org/html5/spec/dnd.html
 // https://developer.mozilla.org/En/DragDrop/Drag_Operations
+// https://developer.mozilla.org/En/DragDrop/DataTransfer
 // http://www.html5rocks.com/en/tutorials/dnd/basics/
 
 
@@ -119,6 +121,9 @@ function move_note_ajax_post(id, x, y, z) {
 
 function dragstart_experiment(ev) {
 	console.log("dragstart", this, ev);
+	ev.stopPropagation();
+
+	ev.dataTransfer.setData('text/plain', 'Blah blah');
 }
 function dragenter_experiment(ev) {
 	console.log("dragenter", this, ev);
@@ -126,10 +131,18 @@ function dragenter_experiment(ev) {
 
 
 function accepting_drag(ev) {
+	// This function is a dragover event handler
+
+	// In this context, preventDefault() means YesIamAcceptingTheDragPlease()
 	ev.preventDefault();
+
+	// stopPropagation() doesn't seem really needed, though.
+	ev.stopPropagation();
 }
 
 function drop_experiment(ev) {
+	// Only one of stopPropagation() or preventDefault() is actually needed
+	ev.stopPropagation();
 	ev.preventDefault();
 
 	var tmp = document.createElement('div');
