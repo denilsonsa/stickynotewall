@@ -15,14 +15,49 @@ input[type=number] {
 	border: 1px inset #DDDDDD;
 	overflow: auto;
 }
+
 .note {
 	position: absolute;
+	border-width: 1px;
+	border-style: solid;
+
+	/* Hidden by design. If something doesn't fit, it simply can't be
+	 * displayed, just like a real paper note.
+	 */
+	overflow: hidden;
+}
+.note p.text {
+	margin: 0;
+	white-space: pre;
+}
+
+.note,  /* .yellow is the default color */
+.note.yellow {
 	background: #FFFF80;
 	border: 1px solid #EEEE00;
 	color: black;
-
-	overflow: hidden;
 }
-.note .text {
-	white-space: pre;
+
+.note.pink {
+	background: #FF80FF;
+	border: 1px solid #EE00EE;
+	color: black;
+}
+
+.note.red {
+	background: #FFA0A0;
+	border: 1px solid #EE8080;
+	color: black;
+}
+
+.note.green {
+	background: #A0FFA0;
+	border: 1px solid #80EE80;
+	color: black;
+}
+
+.note.blue {
+	background: #A0D0FF;
+	border: 1px solid #80A0EE;
+	color: black;
 }
