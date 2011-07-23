@@ -35,7 +35,48 @@
 //
 // Custom data-* attributes
 // http://dev.w3.org/html5/spec/elements.html#embedding-custom-non-visible-data-with-the-data-attributes
+// https://developer.mozilla.org/en/DOM/element.dataset
+// element.dataset has been supported in Firefox starting on version 5
+//
+// element.classList
+// http://www.whatwg.org/specs/web-apps/current-work/multipage/urls.html#domtokenlist
+// http://www.whatwg.org/specs/web-apps/current-work/multipage/elements.html#dom-classlist
+// https://developer.mozilla.org/en/DOM/element.classList
+//
+// Node.textContent
+// http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-textContent
+// https://developer.mozilla.org/En/DOM/Node.textContent
 
+
+function MouseEvent_coordinates_relative_to_element(ev, elem, internal_coordinates) {
+	// Receives a MouseEvent and a HTML element, and calculates the event
+	// coordinates relative to the element.
+	//
+	// If "internal_coordinates" is true, returns coordinates for something
+	// intended to be positioned inside the element.
+	// If "internal_coordinates" is false, returns coordinates for positioning
+	// the element itself.
+
+	// This code is probably the same as retrieving ev.offsetX or ev.layerX,
+	// but these properties are non-standard.
+
+	var rect = elem.getBoundingClientRect();
+	var x, y;
+
+	if (internal_coordinates) {
+		x = ev.clientX - rect.left - elem.clientLeft + elem.scrollLeft;
+		y = ev.clientY - rect.top  - elem.clientTop  + elem.scrollTop;
+	} else {
+		x = ev.clientX - rect.left;
+		y = ev.clientY - rect.top;
+	}
+
+	return { 'x': x, 'y': y };
+}
+
+
+var NoteMIMEType = 'application/x-notewall.note+json';
+var has_chrome_issue_31037 = false;
 
 var frontend, backend, events;
 
@@ -62,18 +103,23 @@ frontend = {
 		// document tree)
 
 		var note_div = document.createElement('div');
+
 		note_div.setAttribute('draggable', 'true');
-		note_div.setAttribute('class', 'note');
+		note_div.classList.add('note');
+
+		note_div.dataset.note_id = obj.id;
+		note_div.id = "note_" + obj.id;
+
 		note_div.style.left = obj.x + 'px';
 		note_div.style.top = obj.y + 'px';
 		note_div.style.width = obj.width + 'px';
 		note_div.style.height = obj.height + 'px';
 		note_div.style.zIndex = obj.z;
 
-		note_div.addEventListener('dragstart', events.dragstart_experiment, false);
+		note_div.addEventListener('dragstart', events.dragstart_note, false);
 
-		var text_div = document.createElement('div');
-		text_div.setAttribute('class', 'text');
+		var text_div = document.createElement('p');
+		text_div.classList.add('text');
 
 		var text = document.createTextNode(obj.text);
 
@@ -81,6 +127,48 @@ frontend = {
 		note_div.appendChild(text_div);
 
 		return note_div;
+	},
+
+	'get_text_from_note_element': function(elem) {
+		// Receives a .note HTML element and extracts the text from it.
+
+		var text_elem = elem.querySelector('.text');
+		if (text_elem) {
+			return text_elem.textContent;
+		} else {
+			return '';
+		}
+	},
+	'get_note_obj_from_note_element': function(elem) {
+		// Receives a .note HTML element and returns a Note object.
+
+		var obj = {
+			'id': elem.dataset.note_id,
+			'x': parseInt(elem.style.left),
+			'y': parseInt(elem.style.top),
+			'z': parseInt(elem.style.zIndex),
+			'width': parseInt(elem.style.width),
+			'height': parseInt(elem.style.height),
+			'text': frontend.get_text_from_note_element(elem)
+		};
+		return obj;
+	},
+
+	'clear_color_from_note_element': function(elem) {
+		// Receives a .note HTML element and removes all color-related classes
+		// from it.
+
+		var color_classes = [
+			'yellow',
+			'pink',
+			'red',
+			'green',
+			'blue'
+		];
+		var i;
+		for (i = 0; i < color_classes.length; i++) {
+			elem.classList.remove(color_classes[i]);
+		}
 	},
 
 	'create_notes_from_array': function(json_obj) {
@@ -157,39 +245,106 @@ events = {
 	// These functions handle all UI events, and usually call other functions
 	// from the backend and frontend.
 
-	'dragstart_experiment': function(ev) {
-		console.log("dragstart", this, ev);
+	'dragstart_note': function(ev) {
+		//console.log("dragstart", this, ev);
 		ev.stopPropagation(); // not really needed, but it makes sense here.
 
-		ev.dataTransfer.setData('text/plain', 'Blah blah');
+		// (Re)building the Note object from the element
+		var note_obj = frontend.get_note_obj_from_note_element(this);
+
+		// Storing the mouse position relative to this element
+		var coords = MouseEvent_coordinates_relative_to_element(ev, this, false);
+		note_obj.mouse_x = coords.x;
+		note_obj.mouse_y = coords.y;
+
+		// Storing the note data in more than one format
+		//
+		// By the way, that MIME Type is something I made up and seems to make
+		// sense for me, but I don't know if that is adequate.
+		// http://stackoverflow.com/questions/6767128/what-format-mime-type-should-i-use-for-html5-drag-and-drop-operations
+		console.log(note_obj);
+		console.log(JSON.stringify(note_obj));
+		ev.dataTransfer.setData(NoteMIMEType, JSON.stringify(note_obj));
+		ev.dataTransfer.setData('text/plain', note_obj.text);
+
+		if (!ev.dataTransfer.getData(NoteMIMEType)) {
+			// Detecting Chrome bug (or lack of feature)
+			// http://code.google.com/p/chromium/issues/detail?id=31037
+			console.log('Chrome issue 31037 detected!');
+			has_chrome_issue_31037 = true;
+			// Falling back to storing the JSON data as text/plain, to work
+			// around Chrome issue.
+			ev.dataTransfer.setData('text/plain', JSON.stringify(note_obj));
+		}
+
+		ev.dataTransfer.effectAllowed = 'copyMove';
 	},
 
-	'dragenter_experiment': function(ev) {
-		//console.log("dragenter", this, ev);
-	},
+	'dragover_wall': function(ev) {
+		// For now, let's just accept ANYTHING, and mark as "move" instead of
+		// "copy". This function might be smarter someday in future.
 
+		ev.dataTransfer.dropEffect = 'move';
 
-	'accepting_drag': function(ev) {
-		// This function is a dragover event handler
-
-		// In this context, preventDefault() means YesIamAcceptingTheDragPlease()
+		// On dragover, preventDefault() means YesIamAcceptingTheDragPlease()
+		// Note that just stopPropagation() doesn't work; preventDefault() must
+		// be called in order to accept the drag.
 		ev.preventDefault();
 
-		// stopPropagation() doesn't seem really needed, though.
+		// stopPropagation() isn't needed, though.
 		ev.stopPropagation();
 	},
 
-	'drop_experiment': function(ev) {
+	'drop_wall': function(ev) {
 		// Only one of stopPropagation() or preventDefault() is actually needed
 		ev.stopPropagation();
 		ev.preventDefault();
 
-		var tmp = document.createElement('div');
-		var rect = this.getBoundingClientRect();
-		var left = ev.clientX - rect.left - this.clientLeft + this.scrollLeft;
-		var top = ev.clientY - rect.top - this.clientTop + this.scrollTop;
-		tmp.setAttribute('style', 'position:absolute; width: 2px; height: 2px; top: '+top+'px; left: '+left+'px; background: red;');
-		this.appendChild(tmp);
+		var coords = MouseEvent_coordinates_relative_to_element(ev, this, true);
+
+		// DEBUG START
+		/*
+		console.log('drop', ev, ev.dataTransfer, this);
+		console.log(ev.dataTransfer.types);
+		if (ev.dataTransfer.types) {
+			var i;
+			for (i = 0; i < ev.dataTransfer.types.length; i++) {
+				var type = ev.dataTransfer.types[i];
+				console.log(type, ev.dataTransfer.getData(type));
+			}
+		}
+		*/
+
+		var dot = document.createElement('div');
+		dot.setAttribute('style', 'position:absolute; width: 2px; height: 2px; left: ' + coords.x + 'px; top: ' + coords.y + 'px; background: red;');
+		this.appendChild(dot);
+		// DEBUG END
+
+		var note_mime_type = NoteMIMEType;
+		if (has_chrome_issue_31037) {
+			note_mime_type = 'text/plain';
+		}
+		var note_obj_string = ev.dataTransfer.getData(note_mime_type);
+		var note_obj;
+		try {
+			note_obj = JSON.parse(note_obj_string);
+		} catch (e) {
+			// Do nothing
+		}
+
+		if (note_obj) {
+			// The user dropped a Note object! Let's handle that!
+			// (or, something that might be a note object)
+			// TODO: write me!
+			console.log('It is a note!', note_obj);
+		} else {
+			// Let's fall back to creating a note with the dropped text
+			var text = ev.dataTransfer.getData('text/plain');
+			if (text) {
+				// TODO: write me!
+				console.log('It is just text', text);
+			}
+		}
 	},
 
 
@@ -207,9 +362,8 @@ events = {
 
 
 		var wall = document.getElementsByClassName('wall')[0];
-		wall.addEventListener('dragover', events.accepting_drag, false);
-		wall.addEventListener('dragenter', events.dragenter_experiment, false);
-		wall.addEventListener('drop', events.drop_experiment, false);
+		wall.addEventListener('dragover', events.dragover_wall, false);
+		wall.addEventListener('drop', events.drop_wall, false);
 	}
 
 };
