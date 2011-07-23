@@ -104,8 +104,10 @@ var available_note_sizes = [
 	//
 	// [width, height],
 	[ 50,  50],
+	[ 50, 100],
 	[100,  50],
 	[100, 100],
+	[100, 150],
 	[150, 100],
 	[150, 150],
 	[200, 200]
@@ -351,11 +353,11 @@ frontend = {
 			size.style.width = width + 'px';
 			size.style.height = height + 'px';
 
+			size.addEventListener('click', events.resize_size_on_click, false);
+
 			// Inserting at the reverse order
 			//resize_interface.appendChild(size);
 			resize_interface.insertBefore(size, resize_interface.firstChild);
-
-			// TODO: attach event handlers
 		}
 
 		return resize_interface;
@@ -367,6 +369,15 @@ frontend = {
 			console.log(state);
 			console.log(resize_interface);
 			state.edit_note_elem.appendChild(resize_interface);
+		}
+	},
+
+	'resize_note_being_edited': function(width, height) {
+		// Resizes the .note element, and does nothing else.
+		// The new size will be saved whenever the edit is finalized.
+		if (state.is_editing) {
+			state.edit_note_elem.style.width = width + 'px';
+			state.edit_note_elem.style.height = height + 'px';
 		}
 	}
 };
@@ -522,6 +533,15 @@ events = {
 
 	'resize_note_button_on_click': function(ev) {
 		frontend.add_resize_interface_to_note_being_edited();
+	},
+
+	'resize_size_on_click': function(ev) {
+		var width = parseInt(this.style.width);
+		var height = parseInt(this.style.height);
+		frontend.resize_note_being_edited(width, height);
+
+		var resize_interface = document.getElementById('resize_interface');
+		resize_interface.parentNode.removeChild(resize_interface);
 	},
 
 	'note_on_click': function(ev) {
