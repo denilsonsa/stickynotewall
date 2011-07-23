@@ -1,6 +1,6 @@
 // JSLint comments:
 /*global document, window, XMLHttpRequest, console, FormData */
-/*jslint undef: true, sloppy: true, white: true, onevar: false, plusplus: true, maxerr: 50, maxlen: 78, indent: 4 */
+/*jslint undef: true, sloppy: true, white: true, onevar: false, plusplus: true, maxerr: 50, maxlen: 120, indent: 4 */
 
 
 // document.querySelectorAll()
@@ -52,7 +52,7 @@
 // https://developer.mozilla.org/en/DOM:element.innerHTML
 
 
-function MouseEvent_coordinates_relative_to_element(ev, elem, internal_coordinates) {
+function get_MouseEvent_coordinates_relative_to_element(ev, elem, internal_coordinates) {
 	// Receives a MouseEvent and a HTML element, and calculates the event
 	// coordinates relative to the element.
 	//
@@ -200,7 +200,7 @@ frontend = {
 		var max = 0;
 		var i;
 		for (i = 0; i < notes.length; i++) {
-			zIndex = parseInt(notes[i].style.zIndex);
+			var zIndex = parseInt(notes[i].style.zIndex, 10);
 			if (zIndex > max) {
 				max = zIndex;
 			}
@@ -224,11 +224,11 @@ frontend = {
 
 		var obj = {
 			'id': elem.dataset.note_id,
-			'x': parseInt(elem.style.left),
-			'y': parseInt(elem.style.top),
-			'z': parseInt(elem.style.zIndex),
-			'width': parseInt(elem.style.width),
-			'height': parseInt(elem.style.height),
+			'x': parseInt(elem.style.left, 10),
+			'y': parseInt(elem.style.top, 10),
+			'z': parseInt(elem.style.zIndex, 10),
+			'width': parseInt(elem.style.width, 10),
+			'height': parseInt(elem.style.height, 10),
 			'text': frontend.get_text_from_note_element(elem),
 			'color': elem.dataset.note_color
 		};
@@ -259,7 +259,7 @@ frontend = {
 
 		var elem = document.getElementById('note_' + id);
 		if (elem) {
-			if (state.is_editing && state.edit_note_id == id) {
+			if (state.is_editing && state.edit_note_id === id) {
 				frontend.stop_editing_note();
 			}
 
@@ -271,7 +271,7 @@ frontend = {
 		var id = note_elem.dataset.note_id;
 
 		if (state.is_editing) {
-			if (state.edit_note_id == id) {
+			if (state.edit_note_id === id) {
 				// I'm already editing this note! What do you want to do?
 				return;
 			}
@@ -504,8 +504,8 @@ backend = {
 		formdata.append('id', state.edit_note_id);
 		formdata.append('text', text_textarea.value);
 		formdata.append('color', note_color_select.value);
-		formdata.append('width', parseInt(note_elem.style.width));
-		formdata.append('height', parseInt(note_elem.style.height));
+		formdata.append('width', parseInt(note_elem.style.width, 10));
+		formdata.append('height', parseInt(note_elem.style.height, 10));
 
 		XHR.onreadystatechange = function() {
 			if (this.readyState === 4 && this.status === 200) {
@@ -556,8 +556,8 @@ events = {
 	},
 
 	'resize_size_on_click': function(ev) {
-		var width = parseInt(this.style.width);
-		var height = parseInt(this.style.height);
+		var width = parseInt(this.style.width, 10);
+		var height = parseInt(this.style.height, 10);
 		frontend.resize_note_being_edited(width, height);
 
 		var resize_interface = document.getElementById('resize_interface');
@@ -599,7 +599,7 @@ events = {
 		var note_obj = frontend.get_note_obj_from_note_element(this);
 
 		// Storing the mouse position relative to this element
-		var coords = MouseEvent_coordinates_relative_to_element(ev, this, false);
+		var coords = get_MouseEvent_coordinates_relative_to_element(ev, this, false);
 		note_obj.mouse_x = coords.x;
 		note_obj.mouse_y = coords.y;
 
@@ -668,7 +668,7 @@ events = {
 	'wall_on_dblclick': function(ev) {
 		ev.stopPropagation();
 
-		var coords = MouseEvent_coordinates_relative_to_element(ev, this, true);
+		var coords = get_MouseEvent_coordinates_relative_to_element(ev, this, true);
 
 		var width = default_note_width;
 		var height = default_note_height;
@@ -704,7 +704,7 @@ events = {
 		ev.stopPropagation();
 		ev.preventDefault();
 
-		var coords = MouseEvent_coordinates_relative_to_element(ev, this, true);
+		var coords = get_MouseEvent_coordinates_relative_to_element(ev, this, true);
 
 		var note_mime_type = NoteMIMEType;
 		if (has_chrome_issue_31037) {
