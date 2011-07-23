@@ -155,6 +155,9 @@ frontend = {
 		note_div.dataset.note_id = obj.id;
 		note_div.id = "note_" + obj.id;
 
+		note_div.dataset.note_color = obj.color;
+		note_div.classList.add(obj.color);
+
 		note_div.style.left = obj.x + 'px';
 		note_div.style.top = obj.y + 'px';
 		note_div.style.width = obj.width + 'px';
@@ -224,19 +227,18 @@ frontend = {
 			'z': parseInt(elem.style.zIndex),
 			'width': parseInt(elem.style.width),
 			'height': parseInt(elem.style.height),
-			'text': frontend.get_text_from_note_element(elem)
+			'text': frontend.get_text_from_note_element(elem),
+			'color': elem.dataset.note_color
 		};
 		return obj;
 	},
 
-	'clear_color_from_note_element': function(elem) {
-		// Receives a .note HTML element and removes all color-related classes
-		// from it.
+	'change_color_of_note_element': function(elem, new_color) {
+		// Receives a .note HTML element and changes its color
 
-		var i;
-		for (i = 0; i < available_note_colors.length; i++) {
-			elem.classList.remove(available_note_colors[i][0]);
-		}
+		elem.classList.remove(elem.dataset.note_color);
+		elem.classList.add(new_color);
+		elem.dataset.note_color = new_color;
 	},
 
 	'add_or_update_note': function(note_obj) {
@@ -286,6 +288,9 @@ frontend = {
 		var edit_toolbar = document.getElementById('edit_toolbar');
 		note_elem.appendChild(edit_toolbar);
 
+		var note_color_select = document.getElementById('note_color_select');
+		note_color_select.value = note_elem.dataset.note_color;
+
 		var text_textarea = document.createElement('textarea');
 		text_textarea.id = 'text_textarea';
 		text_textarea.value = frontend.get_text_from_note_element(note_elem);
@@ -294,6 +299,8 @@ frontend = {
 
 	'stop_editing_note': function() {
 		// Only cleans the interface (and the state)
+		// The saving must be done elsewhere.
+
 		if (state.is_editing) {
 			state.edit_note_elem.classList.remove('being_edited');
 
@@ -366,9 +373,13 @@ frontend = {
 	'add_resize_interface_to_note_being_edited': function() {
 		if (state.is_editing) {
 			var resize_interface = frontend.create_resize_note_interface();
-			console.log(state);
-			console.log(resize_interface);
 			state.edit_note_elem.appendChild(resize_interface);
+		}
+	},
+
+	'update_color_of_note_being_edited': function(new_color) {
+		if (state.is_editing) {
+			frontend.change_color_of_note_element(state.edit_note_elem, new_color);
 		}
 	},
 
@@ -426,6 +437,7 @@ backend = {
 
 		var formdata = new FormData();
 		if(notNone(note_obj.text))   formdata.append('text',   note_obj.text);
+		if(notNone(note_obj.color))  formdata.append('color',  note_obj.color);
 		if(notNone(note_obj.x))      formdata.append('x',      note_obj.x);
 		if(notNone(note_obj.y))      formdata.append('y',      note_obj.y);
 		if(notNone(note_obj.z))      formdata.append('z',      note_obj.z);
@@ -484,10 +496,12 @@ backend = {
 
 		var note_elem = state.edit_note_elem;
 		var text_textarea = document.getElementById('text_textarea');
+		var note_color_select = document.getElementById('note_color_select');
 
 		var formdata = new FormData();
 		formdata.append('id', state.edit_note_id);
 		formdata.append('text', text_textarea.value);
+		formdata.append('color', note_color_select.value);
 		formdata.append('width', parseInt(note_elem.style.width));
 		formdata.append('height', parseInt(note_elem.style.height));
 
@@ -530,6 +544,10 @@ backend = {
 events = {
 	// These functions handle all UI events, and usually call other functions
 	// from the backend and frontend.
+
+	'note_color_select_on_input': function(ev) {
+		frontend.update_color_of_note_being_edited(this.value);
+	},
 
 	'resize_note_button_on_click': function(ev) {
 		frontend.add_resize_interface_to_note_being_edited();
@@ -750,6 +768,10 @@ events = {
 
 		var resize_note_button = document.getElementById('resize_note_button');
 		resize_note_button.addEventListener('click', events.resize_note_button_on_click, false);
+
+		var note_color_select = document.getElementById('note_color_select');
+		note_color_select.addEventListener('change', events.note_color_select_on_input, false);
+		note_color_select.addEventListener('input', events.note_color_select_on_input, false);
 
 		var wall = document.getElementsByClassName('wall')[0];
 		wall.addEventListener('click', events.wall_on_click, false);
