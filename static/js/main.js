@@ -232,28 +232,31 @@ backend = {
 	// Backend functions care about server communication, and about calling the
 	// frontend functions after a server response.
 
-	// Using only one XHR object for reloading
+	// Using only one XHR object for some actions
 	'XHR_reload': null,
-	// Using only one XHR object for creating a note
 	'XHR_create': null,
+	'XHR_delete': null,
 
 	'reuse_XHR': function(name) {
 		// Aborts an ongoing XHR, if it exists.
 		// Else, creates a new XHR with this name.
+		// For convenience, also returns the XHR object.
 
 		if (backend[name]) {
 			backend[name].abort();
 		} else {
 			backend[name] = new XMLHttpRequest();
 		}
+
+		return backend[name];
 	},
 
 	'reload_notes_using_ajax': function() {
 		// Tries reloading all notes from server
 
-		backend.reuse_XHR('XHR_reload');
+		var XHR = backend.reuse_XHR('XHR_reload');
 
-		backend.XHR_reload.onreadystatechange = function() {
+		XHR.onreadystatechange = function() {
 			if (this.readyState === 4 && this.status === 200) {
 				var json_obj = JSON.parse(this.responseText);
 
@@ -263,8 +266,8 @@ backend = {
 			// else... do nothing
 		};
 
-		backend.XHR_reload.open('GET', '/ajax/get_notes');
-		backend.XHR_reload.send();
+		XHR.open('GET', '/ajax/get_notes');
+		XHR.send();
 	},
 
 	'create_new_note_using_ajax': function(note_obj) {
@@ -279,9 +282,9 @@ backend = {
 		if(notNone(note_obj.width))  formdata.append('width',  note_obj.width);
 		if(notNone(note_obj.height)) formdata.append('height', note_obj.height);
 
-		backend.reuse_XHR('XHR_create');
+		var XHR = backend.reuse_XHR('XHR_create');
 
-		backend.XHR_create.onreadystatechange = function() {
+		XHR.onreadystatechange = function() {
 			if (this.readyState === 4 && this.status === 200) {
 				var json_obj = JSON.parse(this.responseText);
 				frontend.add_or_update_note(json_obj);
@@ -289,8 +292,8 @@ backend = {
 			// else... do nothing
 		};
 
-		backend.XHR_create.open('POST', '/ajax/add_note');
-		backend.XHR_create.send(formdata);
+		XHR.open('POST', '/ajax/add_note');
+		XHR.send(formdata);
 	},
 
 	'move_note_using_ajax': function(id, x, y, z) {
@@ -315,6 +318,26 @@ backend = {
 		};
 
 		XHR.open('POST', '/ajax/move_note');
+		XHR.send(formdata);
+	},
+
+	'delete_note_using_ajax': function(id) {
+		// Deletes a note using AJAX
+
+		var XHR = backend.reuse_XHR('XHR_delete');
+
+		var formdata = new FormData();
+		formdata.append('id', id);
+
+		XHR.onreadystatechange = function() {
+			if (this.readyState === 4 && this.status === 200) {
+				// The response is empty, no need to parse anything
+				frontend.delete_note_by_id(id);
+			}
+			// else... do nothing
+		};
+
+		XHR.open('POST', '/ajax/delete_note');
 		XHR.send(formdata);
 	}
 };
@@ -384,6 +407,7 @@ events = {
 	'trash_icon_on_dragover': function(ev) {
 		// For now, let's just accept ANYTHING, and mark as "move" instead of
 		// "copy". This function might be smarter someday in future.
+		// Probably when Chrome issue 31037 has been fixed...
 
 		ev.dataTransfer.dropEffect = 'move';
 		ev.preventDefault();
@@ -391,8 +415,15 @@ events = {
 	},
 
 	'trash_icon_on_drop': function(ev) {
-		// TODO: write me
 		this.classList.remove('dragover');
+
+		var note_mime_type = NoteMIMEType;
+		if (has_chrome_issue_31037) {
+			note_mime_type = 'text/plain';
+		}
+		var note_obj_string = ev.dataTransfer.getData(note_mime_type);
+		var note_obj = JSON.parse(note_obj_string);
+		backend.delete_note_using_ajax(note_obj.id);
 	},
 
 
