@@ -2,56 +2,6 @@
 /*global document, window, XMLHttpRequest, console, FormData */
 /*jslint undef: true, sloppy: true, white: true, onevar: false, plusplus: true, maxerr: 50, maxlen: 120, indent: 4 */
 
-
-// document.querySelectorAll()
-// http://www.w3.org/TR/selectors-api/
-// https://developer.mozilla.org/En/DOM/Document.querySelectorAll
-//
-// window.XMLHttpRequest
-// http://www.w3.org/TR/XMLHttpRequest/
-// https://developer.mozilla.org/en/xmlhttprequest
-// https://developer.mozilla.org/En/Using_XMLHttpRequest
-//
-// FormData
-// http://dev.w3.org/2006/webapi/XMLHttpRequest-2/#the-formdata-interface
-// https://developer.mozilla.org/en/XMLHttpRequest/FormData
-// https://developer.mozilla.org/En/XMLHttpRequest/Using_XMLHttpRequest#Using_FormData_objects
-// http://hacks.mozilla.org/2010/07/firefox-4-formdata-and-the-new-file-url-object/
-//
-// Element.getBoundingClientRect(), Element.clientLeft, Element.clientTop
-// http://www.w3.org/TR/cssom-view/#extensions-to-the-element-interface
-// https://developer.mozilla.org/en/DOM/element.getBoundingClientRect
-//
-// MouseEvent.clientX, MouseEvent.clientY
-// http://www.w3.org/TR/2000/REC-DOM-Level-2-Events-20001113/events.html#Events-eventgroupings-mouseevents
-// https://developer.mozilla.org/en/DOM/Event/UIEvent/MouseEvent
-//
-// Drag and drop
-// http://dev.w3.org/html5/spec/dnd.html
-// http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#dnd
-// https://developer.mozilla.org/En/DragDrop/Drag_Operations
-// https://developer.mozilla.org/En/DragDrop/DataTransfer
-// http://www.html5rocks.com/en/tutorials/dnd/basics/
-//
-// Custom data-* attributes
-// http://dev.w3.org/html5/spec/elements.html#embedding-custom-non-visible-data-with-the-data-attributes
-// https://developer.mozilla.org/en/DOM/element.dataset
-// element.dataset has been supported in Firefox starting on version 5
-//
-// element.classList
-// http://www.whatwg.org/specs/web-apps/current-work/multipage/urls.html#domtokenlist
-// http://www.whatwg.org/specs/web-apps/current-work/multipage/elements.html#dom-classlist
-// https://developer.mozilla.org/en/DOM/element.classList
-//
-// Node.textContent
-// http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-textContent
-// https://developer.mozilla.org/En/DOM/Node.textContent
-//
-// innerHTML (AKA the fastest way to wipe the contents of an element)
-// http://www.w3.org/TR/html5/apis-in-html-documents.html#innerhtml
-// https://developer.mozilla.org/en/DOM:element.innerHTML
-
-
 function get_MouseEvent_coordinates_relative_to_element(ev, elem, internal_coordinates) {
 	// Receives a MouseEvent and a HTML element, and calculates the event
 	// coordinates relative to the element.

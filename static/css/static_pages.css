@@ -1,14 +1,40 @@
 @charset "UTF-8";
 
 html, body {
-	margin: 0;
-	padding: 0;
+	/*margin: 0;
+	padding: 0;*/
 }
 
 a img {
 	border: 0;
 }
 
+section {
+	max-width: 50em;
+	border: 1px solid rgba(127, 127, 127, 0.5);
+	padding: 1em;
+	margin: 1em;
+}
+section > :first-child {
+	margin-top: 0;
+}
+section > :last-child {
+	margin-bottom: 0;
+}
+section p {
+	text-indent: 2em;
+	margin: 1em 0;
+	text-align: justify;
+}
+section h1 {
+	font-size: 2em;
+}
+section h2 {
+	font-size: 1.5em;
+}
+section h3 {
+	font-size: 1.2em;
+}
 
 .logout {
 	position: absolute;
@@ -40,12 +66,34 @@ a img {
 
 	overflow: hidden;
 }
-.note.documentation {
+.note.title {
 	background: #FFFF80;
 	border: 1px solid #EEEE00;
 	color: black;
 
-	top: 2em;
+	font-weight: bold;
+
+	top: 1em;
+	left: 1em;
+	width: 4em;
+	height: 4em;
+}
+.note.subtitle {
+	background: #A0FFA0;
+	border: 1px solid #80EE80;
+	color: black;
+
+	top: 1.5em;
+	left: 6em;
+	width: 10em;
+	height: 4em;
+}
+.note.documentation {
+	background: #FFA0A0;
+	border: 1px solid #EE8080;
+	color: black;
+
+	top: 6em;
 	left: 2em;
 	width: 8em;
 	height: 8em;
@@ -55,11 +103,12 @@ a img {
 	border: 1px solid #80A0EE;
 	color: black;
 
-	top: 3em;
+	top: 7em;
 	left: 9em;
 	width: 8em;
 	height: 8em;
 }
+
 .note.back {
 	background: #A0FFA0;
 	border: 1px solid #80EE80;
