@@ -9,10 +9,6 @@ a img {
 	border: 0;
 }
 
-input[type=number] {
-	width: 5em;
-}
-
 
 .logout {
 	position: absolute;

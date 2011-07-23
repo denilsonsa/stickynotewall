@@ -9,6 +9,8 @@ runtime: python
 api_version: 1
 
 handlers:
+
+# Simple static files:
 - url: /css
   static_dir: static/css
 
@@ -22,10 +24,21 @@ handlers:
   static_files: static/favicon.ico
   upload: static/favicon\.ico
 
+# Homepage and help page:
+- url: /
+  script: main.py
+  secure: always
+
+- url: /help
+  script: main.py
+  secure: always
+
+# Everything else must be secure and authenticated
 - url: /.*
   script: main.py
   secure: always
   login: required
+
 
 # http://code.google.com/appengine/docs/python/config/appconfig.html#Builtin_Handlers
 builtins:

@@ -1,0 +1,74 @@
+@charset "UTF-8";
+
+html, body {
+	margin: 0;
+	padding: 0;
+}
+
+a img {
+	border: 0;
+}
+
+
+.logout {
+	position: absolute;
+	top: 0;
+	right: 0;
+	z-index: 10;
+	white-space: nowrap;
+
+	padding: 0.25em 0.5em;
+	font-family: sans-serif;
+}
+.logout a {
+	text-decoration: none;
+}
+.logout a:active,
+.logout a:hover {
+	text-decoration: underline;
+}
+
+
+/* This style is based on "wall.css", but is just for the homepage.  */
+
+.note {
+	position: absolute;
+	border-width: 1px;
+	border-style: solid;
+
+	font-size: 2em;
+
+	overflow: hidden;
+}
+.note.documentation {
+	background: #FFFF80;
+	border: 1px solid #EEEE00;
+	color: black;
+
+	top: 2em;
+	left: 2em;
+	width: 8em;
+	height: 8em;
+}
+.note.login {
+	background: #A0D0FF;
+	border: 1px solid #80A0EE;
+	color: black;
+
+	top: 3em;
+	left: 9em;
+	width: 8em;
+	height: 8em;
+}
+.note.back {
+	background: #A0FFA0;
+	border: 1px solid #80EE80;
+	color: black;
+
+	font-size: 1em;
+
+	top: 0;
+	left: 0;
+	width: 4em;
+	height: 2em;
+}

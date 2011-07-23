@@ -96,10 +96,6 @@ class StickyNote(db.Model):
 
 
 class BaseHandler(webapp.RequestHandler):
-    @property
-    def logout_url(self):
-        return users.create_logout_url(self.request.uri)
-
     def return_json(self, obj):
         '''Convenience function that generates and writes JSON output.'''
 
@@ -110,16 +106,35 @@ class BaseHandler(webapp.RequestHandler):
         return db.Key.from_path('User', users.get_current_user().email())
 
 
-class MainPage(BaseHandler):
+class IndexPage(BaseHandler):
     def get(self):
-        notes = StickyNote.all().ancestor(self.get_ancestor())
+        '''If the user is not logged in, display a simple homepage.
+        If the user is already logged in, display his/her notes.
 
+        '''
+
+        user = users.get_current_user()
+
+        if user:
+            template_values = {
+                'user': user,
+                'logout_url': users.create_logout_url(self.request.uri),
+            }
+            path = get_path('templates', 'wall.html')
+            self.response.out.write(template.render(path, template_values))
+        else:
+            template_values = {
+                'login_url': users.create_login_url(self.request.uri),
+            }
+            path = get_path('templates', 'index.html')
+            self.response.out.write(template.render(path, template_values))
+
+
+class DocumentationPage(BaseHandler):
+    def get(self):
         template_values = {
-            'user': users.get_current_user(),
-            'logout_url': self.logout_url,
         }
-        path = get_path('templates', 'wall.html')
-
+        path = get_path('templates', 'help.html')
         self.response.out.write(template.render(path, template_values))
 
 
@@ -231,7 +246,8 @@ class EditNote(BaseHandler):
 
 application = webapp.WSGIApplication(
     [
-        ('/', MainPage),
+        ('/', IndexPage),
+        ('/help', DocumentationPage),
         ('/ajax/get_notes', GetNotes),
         ('/ajax/add_note', AddNote),
         ('/ajax/delete_note', DeleteNote),
