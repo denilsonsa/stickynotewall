@@ -67,14 +67,14 @@ class StickyNote(db.Model):
 
     # StringProperty is a "short string", limited to 500 chars
     # TextProperty is a "long string", limited a megabyte
-    text = db.StringProperty(multiline=True)
+    text = db.StringProperty(multiline=True, default='')
 
-    x = db.IntegerProperty(required=True)
-    y = db.IntegerProperty(required=True)
+    x = db.IntegerProperty(required=True, default=0)
+    y = db.IntegerProperty(required=True, default=0)
     z = db.IntegerProperty(default=0)
 
-    width = db.IntegerProperty(required=True)
-    height = db.IntegerProperty(required=True)
+    width = db.IntegerProperty(required=True, default=100)
+    height = db.IntegerProperty(required=True, default=100)
 
     # "color" is the CSS class applied to the note object
     color = db.StringProperty(default='yellow')
@@ -141,20 +141,24 @@ class AddNote(BaseHandler):
         Creates a new note.
         '''
 
+        string_properties = ['text', 'color']
+        integer_properties = ['x', 'y', 'z', 'width', 'height']
+        d = {}
+
+        # Getting all parameters from the request
+        for attr in string_properties:
+            value = self.request.get(attr, None)
+            if value is not None:
+                d[attr] = value
+        for attr in integer_properties:
+            value = self.request.get(attr, None)
+            if value is not None:
+                d[attr] = int(value)
+
         note = StickyNote(
             parent=self.get_ancestor(),
             user=users.get_current_user(),
-
-            text=self.request.get('text', ''),
-
-            x=int(self.request.get('x', 0)),
-            y=int(self.request.get('y', 0)),
-            z=int(self.request.get('z', 0)),
-
-            width=int(self.request.get('width', 50)),
-            height=int(self.request.get('height', 50)),
-
-            color=self.request.get('color'),
+            **d
         )
 
         note.put()

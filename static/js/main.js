@@ -112,6 +112,8 @@ var available_note_sizes = [
 	[150, 150],
 	[200, 200]
 ];
+var default_note_width = 100;
+var default_note_height = 100;
 
 var state, frontend, backend, events;
 
@@ -668,8 +670,8 @@ events = {
 
 		var coords = MouseEvent_coordinates_relative_to_element(ev, this, true);
 
-		var width = 50;
-		var height = 50;
+		var width = default_note_width;
+		var height = default_note_height;
 		var x = Math.round(coords.x - width/2);
 		var y = Math.round(coords.y - width/2);
 
@@ -739,8 +741,8 @@ events = {
 			// Let's fall back to creating a note with the dropped text
 			var text = ev.dataTransfer.getData('text/plain');
 			if (text) {
-				var width = 50;
-				var height = 50;
+				var width = default_note_width;
+				var height = default_note_height;
 				var x = Math.round(coords.x - width/2);
 				var y = Math.round(coords.y - width/2);
 
