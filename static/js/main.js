@@ -246,11 +246,16 @@ frontend = {
 	'add_or_update_note': function(note_obj) {
 		// Receives a Note object, delete the note from the wall (if it
 		// exists), and then appends a new .note element
+		//
+		// For convenience, also returns the created .note element.
 
 		frontend.delete_note_by_id(note_obj.id);
 
 		var wall = document.getElementsByClassName('wall')[0];
-		wall.appendChild(frontend.create_note_element(note_obj));
+		var note_elem = frontend.create_note_element(note_obj);
+		wall.appendChild(note_elem);
+
+		return note_elem;
 	},
 
 	'delete_note_by_id': function(id) {
@@ -297,6 +302,7 @@ frontend = {
 		text_textarea.id = 'text_textarea';
 		text_textarea.value = frontend.get_text_from_note_element(note_elem);
 		note_elem.appendChild(text_textarea);
+		text_textarea.focus();
 	},
 
 	'stop_editing_note': function() {
@@ -433,9 +439,12 @@ backend = {
 		XHR.send();
 	},
 
-	'create_new_note_using_ajax': function(note_obj) {
+	'create_new_note_using_ajax': function(note_obj, callback) {
 		// Creates a new Note at the desired position.
 		// If text is null, use some pre-defined text.
+		//
+		// Also has a callback function that can be called after the note is
+		// created.
 
 		var formdata = new FormData();
 		if(notNone(note_obj.text))   formdata.append('text',   note_obj.text);
@@ -451,7 +460,10 @@ backend = {
 		XHR.onreadystatechange = function() {
 			if (this.readyState === 4 && this.status === 200) {
 				var json_obj = JSON.parse(this.responseText);
-				frontend.add_or_update_note(json_obj);
+				var note_elem = frontend.add_or_update_note(json_obj);
+				if (callback) {
+					callback(json_obj, note_elem);
+				}
 			}
 			// else... do nothing
 		};
@@ -681,6 +693,8 @@ events = {
 			'z': frontend.get_max_note_zIndex(),
 			'width': width,
 			'height': height
+		}, function(note_obj, note_elem) {
+			frontend.start_editing_note_elem(note_elem);
 		});
 	},
 
