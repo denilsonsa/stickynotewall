@@ -174,23 +174,16 @@ class DeleteNote(BaseHandler):
         # return nothing
 
 
-class MoveNote(BaseHandler):
+class EditNote(BaseHandler):
     def post(self):
-        '''Receives: id,x,y,z
+        '''Receives: id
+        Optionally receives: text,x,y,z,width,height
         Returns: JSON representation of the updated note.
 
-        Moves the Note.
+        Edits any attribute of the note.
         '''
 
         id = int(self.request.get('id'))
-        x = int(self.request.get('x'))
-        y = int(self.request.get('y'))
-        z = int(self.request.get('z'))
-
-        # Let's just avoid negative coordinates, okay?
-        x = max(0, x)
-        y = max(0, y)
-
         note = StickyNote.get_by_id(id, parent=self.get_ancestor())
 
         if note is None:
@@ -200,9 +193,21 @@ class MoveNote(BaseHandler):
             self.error(403)
             return
 
-        note.x = x
-        note.y = y
-        note.z = z
+        text = self.request.get('text', None)
+        if text is not None:
+            note.text = text
+
+        integer_properties = ['x','y','z','width','height']
+        for attr in integer_properties:
+            new_value = self.request.get(attr, None)
+            if new_value is not None:
+                # Converting string to integer...
+                new_value = int(new_value)
+                # Let's just avoid negative coordinates, okay?
+                new_value = max(0, new_value)
+
+                setattr(note, attr, new_value)
+
         note.put()
 
         self.return_json(note)
@@ -212,9 +217,9 @@ application = webapp.WSGIApplication(
     [
         ('/', MainPage),
         ('/ajax/get_notes', GetNotes),
-        ('/ajax/move_note', MoveNote),
         ('/ajax/add_note', AddNote),
         ('/ajax/delete_note', DeleteNote),
+        ('/ajax/edit_note', EditNote),
     ],
     debug=True
 )

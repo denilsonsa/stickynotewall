@@ -85,7 +85,16 @@ function notNone(value) {
 var NoteMIMEType = 'application/x-notewall.note+json';
 var has_chrome_issue_31037 = false;
 
-var frontend, backend, events;
+var state, frontend, backend, events;
+
+state = {
+	// "state" contains variables about the current interface state.
+	// Mostly useful while editing a Note.
+
+	'is_editing': false,
+	'edit_note_id': null,
+	'edit_note_elem': null
+};
 
 
 frontend = {
@@ -124,6 +133,8 @@ frontend = {
 		note_div.style.height = obj.height + 'px';
 		note_div.style.zIndex = obj.z;
 
+		note_div.addEventListener('click', events.note_on_click, false);
+		note_div.addEventListener('dblclick', events.note_on_dblclick, false);
 		note_div.addEventListener('dragstart', events.note_on_dragstart, false);
 		note_div.addEventListener('dragend', events.note_on_dragend, false);
 
@@ -148,6 +159,7 @@ frontend = {
 			return '';
 		}
 	},
+
 	'get_note_obj_from_note_element': function(elem) {
 		// Receives a .note HTML element and returns a Note object.
 
@@ -207,8 +219,57 @@ frontend = {
 
 		var elem = document.getElementById('note_' + id);
 		if (elem) {
+			if (state.is_editing && state.edit_note_id == id) {
+				frontend.stop_editing_note();
+			}
+
 			elem.parentNode.removeChild(elem);
 		}
+	},
+
+	'start_editing_note_elem': function(note_elem) {
+		var id = note_elem.dataset.note_id;
+
+		if (state.is_editing) {
+			if (state.edit_note_id == id) {
+				// I'm already editing this note! What do you want to do?
+				return;
+			}
+			// Let's save the previous note
+			backend.save_edit_using_ajax();
+			frontend.stop_editing_note();
+		}
+
+		// Start editing...
+		state.is_editing = true;
+		state.edit_note_id = id;
+		state.edit_note_elem = note_elem;
+
+		note_elem.classList.add('being_edited');
+
+		var edit_toolbar = document.getElementById('edit_toolbar');
+		note_elem.appendChild(edit_toolbar);
+
+		var text_textarea = document.createElement('textarea');
+		text_textarea.id = 'text_textarea';
+		text_textarea.value = frontend.get_text_from_note_element(note_elem);
+		note_elem.appendChild(text_textarea);
+	},
+
+	'stop_editing_note': function() {
+		// Only cleans the interface (and the state)
+
+		state.edit_note_elem.classList.remove('being_edited');
+
+		var edit_toolbar = document.getElementById('edit_toolbar');
+		document.documentElement.appendChild(edit_toolbar);
+
+		var text_textarea = document.getElementById('text_textarea');
+		text_textarea.parentNode.removeChild(text_textarea);
+
+		state.is_editing = false;
+		state.edit_note_id = null;
+		state.edit_note_elem = null;
 	},
 
 	'get_max_note_zIndex': function() {
@@ -312,7 +373,39 @@ backend = {
 			// else... do nothing
 		};
 
-		XHR.open('POST', '/ajax/move_note');
+		XHR.open('POST', '/ajax/edit_note');
+		XHR.send(formdata);
+	},
+
+	'save_edit_using_ajax': function() {
+		// Saves whatever Note is beind edited, and stop editing.
+
+		if (!state.is_editing) {
+			return;
+		}
+
+		// I believe it's better to not reuse XHR for this function.
+		// Am I right?
+		var XHR = new XMLHttpRequest();
+
+		var note_elem = state.edit_note_elem;
+		var text_textarea = document.getElementById('text_textarea');
+
+		var formdata = new FormData();
+		formdata.append('id', state.edit_note_id);
+		formdata.append('text', text_textarea.value);
+		formdata.append('width', parseInt(note_elem.style.width));
+		formdata.append('height', parseInt(note_elem.style.height));
+
+		XHR.onreadystatechange = function() {
+			if (this.readyState === 4 && this.status === 200) {
+				var json_obj = JSON.parse(this.responseText);
+				frontend.add_or_update_note(json_obj);
+			}
+			// else... do nothing
+		};
+
+		XHR.open('POST', '/ajax/edit_note');
 		XHR.send(formdata);
 	},
 
@@ -344,6 +437,25 @@ events = {
 	// These functions handle all UI events, and usually call other functions
 	// from the backend and frontend.
 
+	'note_on_click': function(ev) {
+		if (this.classList.contains('being_edited')) {
+			// I'm already being edited, let's avoid this propagating to the
+			// wall element.
+			ev.stopPropagation();
+		}
+	},
+
+	'note_on_dblclick': function(ev) {
+		ev.stopPropagation();
+
+		if (this.classList.contains('being_edited')) {
+			// I'm already being edited
+			return;
+		}
+
+		frontend.start_editing_note_elem(this);
+	},
+
 	'note_on_dragstart': function(ev) {
 		ev.stopPropagation(); // not really needed, but it makes sense here.
 
@@ -352,7 +464,7 @@ events = {
 		// ev.preventDefault();
 
 		document.documentElement.classList.add('there_is_a_note_being_dragged');
-		this.classList.add('note_being_dragged');
+		this.classList.add('being_dragged');
 
 		// (Re)building the Note object from the element
 		var note_obj = frontend.get_note_obj_from_note_element(this);
@@ -385,11 +497,7 @@ events = {
 
 	'note_on_dragend': function(ev) {
 		document.documentElement.classList.remove('there_is_a_note_being_dragged');
-		this.classList.remove('note_being_dragged');
-	},
-
-	'note_on_dblclick': function(ev) {
-		ev.stopPropagation();
+		this.classList.remove('being_dragged');
 	},
 
 
@@ -423,6 +531,29 @@ events = {
 		backend.delete_note_using_ajax(note_obj.id);
 	},
 
+
+	'wall_on_click': function(ev) {
+		backend.save_edit_using_ajax();
+	},
+
+	'wall_on_dblclick': function(ev) {
+		ev.stopPropagation();
+
+		var coords = MouseEvent_coordinates_relative_to_element(ev, this, true);
+
+		var width = 50;
+		var height = 50;
+		var x = Math.round(coords.x - width/2);
+		var y = Math.round(coords.y - width/2);
+
+		backend.create_new_note_using_ajax({
+			'x': x,
+			'y': y,
+			'z': frontend.get_max_note_zIndex(),
+			'width': width,
+			'height': height
+		});
+	},
 
 	'wall_on_dragover': function(ev) {
 		// For now, let's just accept ANYTHING, and mark as "move" instead of
@@ -497,25 +628,6 @@ events = {
 		}
 	},
 
-	'wall_on_dblclick': function(ev) {
-		ev.stopPropagation();
-
-		var coords = MouseEvent_coordinates_relative_to_element(ev, this, true);
-
-		var width = 50;
-		var height = 50;
-		var x = Math.round(coords.x - width/2);
-		var y = Math.round(coords.y - width/2);
-
-		backend.create_new_note_using_ajax({
-			'x': x,
-			'y': y,
-			'z': frontend.get_max_note_zIndex(),
-			'width': width,
-			'height': height
-		});
-	},
-
 
 	'window_on_load': function() {
 		// Loading the notes on page load:
@@ -525,9 +637,10 @@ events = {
 		reload_button.addEventListener('click', backend.reload_notes_using_ajax, false);
 
 		var wall = document.getElementsByClassName('wall')[0];
+		wall.addEventListener('click', events.wall_on_click, false);
+		wall.addEventListener('dblclick', events.wall_on_dblclick, false);
 		wall.addEventListener('dragover', events.wall_on_dragover, false);
 		wall.addEventListener('drop', events.wall_on_drop, false);
-		wall.addEventListener('dblclick', events.wall_on_dblclick, false);
 
 		var trash_icon = document.getElementById('trash_icon');
 		trash_icon.addEventListener('dragenter', events.trash_icon_on_dragenter, false);
