@@ -10,7 +10,7 @@ a img {
 }
 
 
-.logout {
+.links {
 	position: absolute;
 	top: 0;
 	right: 0;
@@ -19,12 +19,13 @@ a img {
 
 	padding: 0.25em 0.5em;
 	font-family: sans-serif;
+	text-align: right;
 }
-.logout a {
+.links a {
 	text-decoration: none;
 }
-.logout a:active,
-.logout a:hover {
+.links a:active,
+.links a:hover {
 	text-decoration: underline;
 }
 
