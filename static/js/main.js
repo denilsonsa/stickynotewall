@@ -149,6 +149,32 @@ frontend = {
 		return note_div;
 	},
 
+	'create_notes_from_array': function(note_array) {
+		// Receives an Array of Notes, and then creates and attaches each note
+		// to the document tree.
+
+		var wall = document.getElementsByClassName('wall')[0];
+		var i;
+		for (i = 0; i < note_array.length; i++) {
+			wall.appendChild(frontend.new_note_element(note_array[i]));
+		}
+	},
+
+	'get_max_note_zIndex': function() {
+		// Returns the maximum z-index value for all current notes
+
+		var notes = document.querySelectorAll('.wall > .note');
+		var max = 0;
+		var i;
+		for (i = 0; i < notes.length; i++) {
+			zIndex = parseInt(notes[i].style.zIndex);
+			if (zIndex > max) {
+				max = zIndex;
+			}
+		}
+		return max;
+	},
+
 	'get_text_from_note_element': function(elem) {
 		// Receives a .note HTML element and extracts the text from it.
 
@@ -189,17 +215,6 @@ frontend = {
 		var i;
 		for (i = 0; i < color_classes.length; i++) {
 			elem.classList.remove(color_classes[i]);
-		}
-	},
-
-	'create_notes_from_array': function(note_array) {
-		// Receives an Array of Notes, and then creates and attaches each note
-		// to the document tree.
-
-		var wall = document.getElementsByClassName('wall')[0];
-		var i;
-		for (i = 0; i < note_array.length; i++) {
-			wall.appendChild(frontend.new_note_element(note_array[i]));
 		}
 	},
 
@@ -270,21 +285,6 @@ frontend = {
 		state.is_editing = false;
 		state.edit_note_id = null;
 		state.edit_note_elem = null;
-	},
-
-	'get_max_note_zIndex': function() {
-		// Returns the maximum z-index value for all current notes
-
-		var notes = document.querySelectorAll('.wall > .note');
-		var max = 0;
-		var i;
-		for (i = 0; i < notes.length; i++) {
-			zIndex = parseInt(notes[i].style.zIndex);
-			if (zIndex > max) {
-				max = zIndex;
-			}
-		}
-		return max;
 	}
 };
 
