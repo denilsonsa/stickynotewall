@@ -259,7 +259,7 @@ frontend = {
 
 		var elem = document.getElementById('note_' + id);
 		if (elem) {
-			if (state.is_editing && state.edit_note_id === id) {
+			if (state.is_editing && state.edit_note_id == id) {
 				frontend.stop_editing_note();
 			}
 
@@ -271,7 +271,7 @@ frontend = {
 		var id = note_elem.dataset.note_id;
 
 		if (state.is_editing) {
-			if (state.edit_note_id === id) {
+			if (state.edit_note_id == id) {
 				// I'm already editing this note! What do you want to do?
 				return;
 			}
