@@ -91,7 +91,7 @@ input[type=number] {
 	width: 48px;
 	height: 48px;
 }
-.there_is_a_note_being_dragged #trash_icon.dragover {
+.there_is_a_note_being_dragged.something_is_being_dragged_to_the_trash #trash_icon {
 	width: 80px;
 	height: 80px;
 }
@@ -115,7 +115,10 @@ input[type=number] {
 }
 
 .note.being_dragged {
-	opacity: 0.5;
+	opacity: 0.66;
+}
+.something_is_being_dragged_to_the_trash .note.being_dragged {
+	opacity: 0.33;
 }
 
 .note.being_edited {

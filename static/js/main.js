@@ -631,11 +631,11 @@ events = {
 
 
 	'trash_icon_on_dragenter': function(ev) {
-		this.classList.add('dragover');
+		document.documentElement.classList.add('something_is_being_dragged_to_the_trash');
 	},
 
 	'trash_icon_on_dragleave': function(ev) {
-		this.classList.remove('dragover');
+		document.documentElement.classList.remove('something_is_being_dragged_to_the_trash');
 	},
 
 	'trash_icon_on_dragover': function(ev) {
@@ -649,7 +649,7 @@ events = {
 	},
 
 	'trash_icon_on_drop': function(ev) {
-		this.classList.remove('dragover');
+		document.documentElement.classList.remove('something_is_being_dragged_to_the_trash');
 
 		var note_mime_type = NoteMIMEType;
 		if (has_chrome_issue_31037) {
@@ -760,7 +760,6 @@ events = {
 
 
 	'window_on_load': function() {
-		// Loading the notes on page load:
 		backend.reload_notes_using_ajax();
 
 		frontend.fill_note_color_select_with_choices();
