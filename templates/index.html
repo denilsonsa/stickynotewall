@@ -14,21 +14,6 @@
 <div class="logout"><a href="{{ logout_url }}">Logout</a> from <em>{{ user.nickname }}</em></div>
 
 <div class="wall">
-{% for note in notes %}
-
-	<div class="note" style="
-		left: {{ note.x }}px;
-		top: {{ note.y }}px;
-		width: {{ note.width }}px;
-		height: {{ note.height }}px;
-		z-index: {{ note.z }};
-		" data:id="{{ note.key.id }}"
-	>
-		<form action="/delete_note" method="POST"><input type="hidden" name="id" value="{{ note.key.id }}"><input type="submit" value="X"></form>
-		{{ note.text|escape }}
-	</div>
-
-{% endfor %}
 </div>
 
 <hr>

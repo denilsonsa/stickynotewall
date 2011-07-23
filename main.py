@@ -95,6 +95,7 @@ class BaseHandler(webapp.RequestHandler):
     def return_json(self, obj):
         '''Convenience function that generates and writes JSON output.'''
 
+        self.response.headers['Content-Type'] = 'application/json'
         json.dump(obj, cls=ExtensibleJSONEncoder, fp=self.response.out)
 
     def get_ancestor(self):
@@ -108,7 +109,6 @@ class MainPage(BaseHandler):
         template_values = {
             'user': users.get_current_user(),
             'logout_url': self.logout_url,
-            'notes': notes,
         }
         path = get_path('templates', 'index.html')
 
@@ -117,34 +117,50 @@ class MainPage(BaseHandler):
 
 class GetNotes(BaseHandler):
     def get(self):
-        notes = StickyNote.all().ancestor(self.get_ancestor())
+        '''Receives: nothing
+        Returns: JSON array of all notes.
+        '''
 
+        notes = StickyNote.all().ancestor(self.get_ancestor())
         self.return_json(notes)
 
 
 class AddNote(BaseHandler):
     def post(self):
+        '''Receives: text
+        Optionally receives: x,y,z,width,height
+        Returns: JSON representation of the new note.
+
+        Creates a new note.
+        '''
+
         note = StickyNote(
             parent=self.get_ancestor(),
             user=users.get_current_user(),
 
             text=self.request.get('text'),
 
-            x=int(self.request.get('x')),
-            y=int(self.request.get('y')),
-            z=int(self.request.get('z')),
+            x=int(self.request.get('x', 0)),
+            y=int(self.request.get('y', 0)),
+            z=int(self.request.get('z', 0)),
 
-            width=int(self.request.get('width')),
-            height=int(self.request.get('height')),
+            width=int(self.request.get('width', 50)),
+            height=int(self.request.get('height', 50)),
         )
 
         note.put()
-
-        self.redirect('/')
+        self.return_json(note)
 
 
 class DeleteNote(BaseHandler):
     def post(self):
+        '''Receives: id
+        Returns: nothing.
+
+        Deletes the Note.
+        (if it fails, it sends 404 or 403 response)
+        '''
+
         id = int(self.request.get('id'))
         note = StickyNote.get_by_id(id, parent=self.get_ancestor())
 
@@ -156,12 +172,17 @@ class DeleteNote(BaseHandler):
             return
 
         note.delete()
-
         # return nothing
 
 
 class MoveNote(BaseHandler):
     def post(self):
+        '''Receives: id,x,y,z
+        Returns: JSON representation of the updated note.
+
+        Moves the Note.
+        '''
+
         id = int(self.request.get('id'))
         x = int(self.request.get('x'))
         y = int(self.request.get('y'))
@@ -189,8 +210,8 @@ application = webapp.WSGIApplication(
         ('/', MainPage),
         ('/ajax/get_notes', GetNotes),
         ('/ajax/move_note', MoveNote),
-        ('/add_note', AddNote),
-        ('/delete_note', DeleteNote),
+        ('/ajax/add_note', AddNote),
+        ('/ajax/delete_note', DeleteNote),
     ],
     debug=True
 )
