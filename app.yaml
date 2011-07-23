@@ -1,7 +1,5 @@
 # The application name:
-application: notewall
-# TODO: Rename this app
-#application: stickynotewall
+application: stickynotewall
 # The application version:
 version: 1
 # The runtime environment and version:
