@@ -46,6 +46,10 @@
 // Node.textContent
 // http://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-textContent
 // https://developer.mozilla.org/En/DOM/Node.textContent
+//
+// innerHTML (AKA the fastest way to wipe the contents of an element)
+// http://www.w3.org/TR/html5/apis-in-html-documents.html#innerhtml
+// https://developer.mozilla.org/en/DOM:element.innerHTML
 
 
 function MouseEvent_coordinates_relative_to_element(ev, elem, internal_coordinates) {
@@ -86,16 +90,23 @@ var NoteMIMEType = 'application/x-notewall.note+json';
 var has_chrome_issue_31037 = false;
 
 var available_note_colors = [
-	'yellow',
-	'pink',
-	'red',
-	'green',
-	'blue'
+	// ['value', 'Pretty name']
+	['yellow', 'Yellow'],
+	['pink',   'Pink'],
+	['red',    'Red'],
+	['green',  'Green'],
+	['blue',   'Blue']
 ];
 var available_note_sizes = [
-    // The order is important!
+    // The order of each pair is important!
+	// (else, the mouse-over effect won't work correctly, as the bigger size
+	// will be on top of the smaller one)
+	//
+	// [width, height],
 	[ 50,  50],
+	[100,  50],
 	[100, 100],
+	[150, 100],
 	[150, 150],
 	[200, 200]
 ];
@@ -222,7 +233,7 @@ frontend = {
 
 		var i;
 		for (i = 0; i < available_note_colors.length; i++) {
-			elem.classList.remove(available_note_colors[i]);
+			elem.classList.remove(available_note_colors[i][0]);
 		}
 	},
 
@@ -298,6 +309,23 @@ frontend = {
 			state.is_editing = false;
 			state.edit_note_id = null;
 			state.edit_note_elem = null;
+		}
+	},
+
+	'fill_note_color_select_with_choices': function() {
+		var note_color_select = document.getElementById('note_color_select');
+		if (note_color_select) {
+			note_color_select.innerHTML = '';
+
+			var i;
+			for (i = 0; i < available_note_colors.length; i++) {
+				var option = document.createElement('option');
+				option.setAttribute('value', available_note_colors[i][0]);
+				option.appendChild(
+					document.createTextNode(available_note_colors[i][1])
+				);
+				note_color_select.appendChild(option);
+			}
 		}
 	},
 
@@ -516,11 +544,13 @@ events = {
 	},
 
 	'note_on_dragstart': function(ev) {
-		ev.stopPropagation(); // not really needed, but it makes sense here.
+		if (this.classList.contains('being_edited')) {
+			// This element is being edited! Do NOT drag it around!
+			ev.preventDefault();
+			return;
+		}
 
-		// If preventDefault() is added, the user won't be able to drag the
-		// element!
-		// ev.preventDefault();
+		ev.stopPropagation(); // not really needed, but it makes sense here.
 
 		document.documentElement.classList.add('there_is_a_note_being_dragged');
 		this.classList.add('being_dragged');
@@ -652,6 +682,7 @@ events = {
 			// For now, let's just MOVE a note that is currently attached to
 			// this wall.
 			// TODO: add support for copying/moving notes between walls.
+			// (but, before that, need to add support for multiple walls!)
 
 			var x = coords.x;
 			var y = coords.y;
@@ -691,6 +722,8 @@ events = {
 	'window_on_load': function() {
 		// Loading the notes on page load:
 		backend.reload_notes_using_ajax();
+
+		frontend.fill_note_color_select_with_choices();
 
 		var reload_button = document.getElementById('reload_button');
 		reload_button.addEventListener('click', backend.reload_notes_using_ajax, false);
