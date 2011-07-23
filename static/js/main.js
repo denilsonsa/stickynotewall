@@ -232,11 +232,6 @@ backend = {
 	// Backend functions care about server communication, and about calling the
 	// frontend functions after a server response.
 
-	// Using only one XHR object for some actions
-	'XHR_reload': null,
-	'XHR_create': null,
-	'XHR_delete': null,
-
 	'reuse_XHR': function(name) {
 		// Aborts an ongoing XHR, if it exists.
 		// Else, creates a new XHR with this name.
@@ -324,7 +319,9 @@ backend = {
 	'delete_note_using_ajax': function(id) {
 		// Deletes a note using AJAX
 
-		var XHR = backend.reuse_XHR('XHR_delete');
+		// I believe it's better to not reuse XHR for this function.
+		// Am I right?
+		var XHR = new XMLHttpRequest();
 
 		var formdata = new FormData();
 		formdata.append('id', id);
