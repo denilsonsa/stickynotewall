@@ -76,8 +76,8 @@ class StickyNote(db.Model):
     width = db.IntegerProperty(required=True)
     height = db.IntegerProperty(required=True)
 
-    # "color" is more like "style", or CSS class
-    color = db.StringProperty()
+    # "color" is the CSS class applied to the note object
+    color = db.StringProperty(default='yellow')
 
     creation_datetime = db.DateTimeProperty(auto_now_add=True)
     last_modified_datetime = db.DateTimeProperty(auto_now=True)
@@ -87,6 +87,11 @@ class StickyNote(db.Model):
         d['id'] = self.key().id()
         for attr in ['text', 'x', 'y', 'z', 'width', 'height', 'color', 'creation_datetime', 'last_modified_datetime']:
             d[attr] = getattr(self, attr)
+
+        # Setting a default value for object that don't have it
+        if not d['color']:
+            d['color'] = 'yellow'
+
         return d
 
 
@@ -130,7 +135,7 @@ class GetNotes(BaseHandler):
 
 class AddNote(BaseHandler):
     def post(self):
-        '''Optionally receives: text,x,y,z,width,height,color
+        '''Optionally receives: text,color,x,y,z,width,height
         Returns: JSON representation of the new note.
 
         Creates a new note.
@@ -182,7 +187,7 @@ class DeleteNote(BaseHandler):
 class EditNote(BaseHandler):
     def post(self):
         '''Receives: id
-        Optionally receives: text,x,y,z,width,height,color
+        Optionally receives: text,color,x,y,z,width,height
         Returns: JSON representation of the updated note.
 
         Edits any attribute of the note.
