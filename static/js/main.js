@@ -171,15 +171,50 @@ frontend = {
 		}
 	},
 
-	'create_notes_from_array': function(json_obj) {
+	'create_notes_from_array': function(note_array) {
 		// Receives an Array of Notes, and then creates and attaches each note
 		// to the document tree.
 
 		var wall = document.getElementsByClassName('wall')[0];
 		var i;
-		for (i = 0; i < json_obj.length; i++) {
-			wall.appendChild(frontend.new_note_element(json_obj[i]));
+		for (i = 0; i < note_array.length; i++) {
+			wall.appendChild(frontend.new_note_element(note_array[i]));
 		}
+	},
+
+	'add_or_update_note': function(note_obj) {
+		// Receives a Note object, delete the note from the wall (if it
+		// exists), and then appends a new .note element
+
+		frontend.delete_note_by_id(note_obj.id);
+
+		var wall = document.getElementsByClassName('wall')[0];
+		wall.appendChild(frontend.new_note_element(note_obj));
+	},
+
+	'delete_note_by_id': function(id) {
+		// Deletes the .note element given its id.
+		// If no element exists, do nothing.
+
+		var elem = document.getElementById('note_' + id);
+		if (elem) {
+			elem.parentNode.removeChild(elem);
+		}
+	},
+
+	'get_max_note_zIndex': function() {
+		// Returns the maximum z-index value for all current notes
+
+		var notes = document.querySelectorAll('.wall > .note');
+		var max = 0;
+		var i;
+		for (i = 0; i < notes.length; i++) {
+			zIndex = parseInt(notes[i].style.zIndex);
+			if (zIndex > max) {
+				max = zIndex;
+			}
+		}
+		return max;
 	}
 
 };
@@ -216,8 +251,8 @@ backend = {
 		backend.XHR_reload.send();
 	},
 
-	'move_note_ajax_post': function(id, x, y, z) {
-		// Huh... I don't know... This function isn't used yet.
+	'move_note_using_ajax': function(id, x, y, z) {
+		// Moves a note using AJAX, and updates the note position.
 
 		var XHR = new XMLHttpRequest();
 		var formdata = new FormData();
@@ -230,7 +265,7 @@ backend = {
 		XHR.onreadystatechange = function() {
 			if (this.readyState === 4 && this.status === 200) {
 				var json_obj = JSON.parse(this.responseText);
-				// TODO: implement me...
+				frontend.add_or_update_note(json_obj);
 			}
 			// else... do nothing
 		};
@@ -262,8 +297,6 @@ events = {
 		// By the way, that MIME Type is something I made up and seems to make
 		// sense for me, but I don't know if that is adequate.
 		// http://stackoverflow.com/questions/6767128/what-format-mime-type-should-i-use-for-html5-drag-and-drop-operations
-		console.log(note_obj);
-		console.log(JSON.stringify(note_obj));
 		ev.dataTransfer.setData(NoteMIMEType, JSON.stringify(note_obj));
 		ev.dataTransfer.setData('text/plain', note_obj.text);
 
@@ -302,24 +335,6 @@ events = {
 
 		var coords = MouseEvent_coordinates_relative_to_element(ev, this, true);
 
-		// DEBUG START
-		/*
-		console.log('drop', ev, ev.dataTransfer, this);
-		console.log(ev.dataTransfer.types);
-		if (ev.dataTransfer.types) {
-			var i;
-			for (i = 0; i < ev.dataTransfer.types.length; i++) {
-				var type = ev.dataTransfer.types[i];
-				console.log(type, ev.dataTransfer.getData(type));
-			}
-		}
-		*/
-
-		var dot = document.createElement('div');
-		dot.setAttribute('style', 'position:absolute; width: 2px; height: 2px; left: ' + coords.x + 'px; top: ' + coords.y + 'px; background: red;');
-		this.appendChild(dot);
-		// DEBUG END
-
 		var note_mime_type = NoteMIMEType;
 		if (has_chrome_issue_31037) {
 			note_mime_type = 'text/plain';
@@ -328,16 +343,29 @@ events = {
 		var note_obj;
 		try {
 			note_obj = JSON.parse(note_obj_string);
-		} catch (e) {
-			// Do nothing
-		}
 
-		if (note_obj) {
 			// The user dropped a Note object! Let's handle that!
 			// (or, something that might be a note object)
-			// TODO: write me!
-			console.log('It is a note!', note_obj);
-		} else {
+
+
+			// For now, let's just MOVE a note that is currently attached to
+			// this wall.
+			// TODO: add support for copying/moving notes between walls.
+
+			var x = coords.x;
+			var y = coords.y;
+			if (note_obj.mouse_x) {
+				x -= note_obj.mouse_x;
+			}
+			if (note_obj.mouse_y) {
+				y -= note_obj.mouse_y;
+			}
+			var z = frontend.get_max_note_zIndex();
+			z += 1;
+
+			backend.move_note_using_ajax(note_obj.id, x, y, z);
+
+		} catch (e) {
 			// Let's fall back to creating a note with the dropped text
 			var text = ev.dataTransfer.getData('text/plain');
 			if (text) {
