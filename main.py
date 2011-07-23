@@ -76,13 +76,16 @@ class StickyNote(db.Model):
     width = db.IntegerProperty(required=True)
     height = db.IntegerProperty(required=True)
 
+    # "color" is more like "style", or CSS class
+    color = db.StringProperty()
+
     creation_datetime = db.DateTimeProperty(auto_now_add=True)
     last_modified_datetime = db.DateTimeProperty(auto_now=True)
 
     def to_json(self):
         d = {}
         d['id'] = self.key().id()
-        for attr in ['text', 'x', 'y', 'z', 'width', 'height', 'creation_datetime', 'last_modified_datetime']:
+        for attr in ['text', 'x', 'y', 'z', 'width', 'height', 'color', 'creation_datetime', 'last_modified_datetime']:
             d[attr] = getattr(self, attr)
         return d
 
@@ -127,7 +130,7 @@ class GetNotes(BaseHandler):
 
 class AddNote(BaseHandler):
     def post(self):
-        '''Optionally receives: text,x,y,z,width,height
+        '''Optionally receives: text,x,y,z,width,height,color
         Returns: JSON representation of the new note.
 
         Creates a new note.
@@ -145,6 +148,8 @@ class AddNote(BaseHandler):
 
             width=int(self.request.get('width', 50)),
             height=int(self.request.get('height', 50)),
+
+            color=self.request.get('color'),
         )
 
         note.put()
@@ -177,7 +182,7 @@ class DeleteNote(BaseHandler):
 class EditNote(BaseHandler):
     def post(self):
         '''Receives: id
-        Optionally receives: text,x,y,z,width,height
+        Optionally receives: text,x,y,z,width,height,color
         Returns: JSON representation of the updated note.
 
         Edits any attribute of the note.
@@ -193,11 +198,13 @@ class EditNote(BaseHandler):
             self.error(403)
             return
 
-        text = self.request.get('text', None)
-        if text is not None:
-            note.text = text
+        string_properties = ['text', 'color']
+        for attr in string_properties:
+            new_value = self.request.get(attr, None)
+            if new_value is not None:
+                setattr(note, attr, new_value)
 
-        integer_properties = ['x','y','z','width','height']
+        integer_properties = ['x', 'y', 'z', 'width', 'height']
         for attr in integer_properties:
             new_value = self.request.get(attr, None)
             if new_value is not None:
