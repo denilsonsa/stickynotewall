@@ -85,6 +85,21 @@ function notNone(value) {
 var NoteMIMEType = 'application/x-notewall.note+json';
 var has_chrome_issue_31037 = false;
 
+var available_note_colors = [
+	'yellow',
+	'pink',
+	'red',
+	'green',
+	'blue'
+];
+var available_note_sizes = [
+    // The order is important!
+	[ 50,  50],
+	[100, 100],
+	[150, 150],
+	[200, 200]
+];
+
 var state, frontend, backend, events;
 
 state = {
@@ -112,7 +127,7 @@ frontend = {
 		}
 	},
 
-	'new_note_element': function(obj) {
+	'create_note_element': function(obj) {
 		// Receives a Note JavaScript object and creates the HTML elements that
 		// represent such object.
 		//
@@ -156,7 +171,7 @@ frontend = {
 		var wall = document.getElementsByClassName('wall')[0];
 		var i;
 		for (i = 0; i < note_array.length; i++) {
-			wall.appendChild(frontend.new_note_element(note_array[i]));
+			wall.appendChild(frontend.create_note_element(note_array[i]));
 		}
 	},
 
@@ -205,16 +220,9 @@ frontend = {
 		// Receives a .note HTML element and removes all color-related classes
 		// from it.
 
-		var color_classes = [
-			'yellow',
-			'pink',
-			'red',
-			'green',
-			'blue'
-		];
 		var i;
-		for (i = 0; i < color_classes.length; i++) {
-			elem.classList.remove(color_classes[i]);
+		for (i = 0; i < available_note_colors.length; i++) {
+			elem.classList.remove(available_note_colors[i]);
 		}
 	},
 
@@ -225,7 +233,7 @@ frontend = {
 		frontend.delete_note_by_id(note_obj.id);
 
 		var wall = document.getElementsByClassName('wall')[0];
-		wall.appendChild(frontend.new_note_element(note_obj));
+		wall.appendChild(frontend.create_note_element(note_obj));
 	},
 
 	'delete_note_by_id': function(id) {
@@ -273,18 +281,65 @@ frontend = {
 
 	'stop_editing_note': function() {
 		// Only cleans the interface (and the state)
+		if (state.is_editing) {
+			state.edit_note_elem.classList.remove('being_edited');
 
-		state.edit_note_elem.classList.remove('being_edited');
+			var edit_toolbar = document.getElementById('edit_toolbar');
+			document.documentElement.appendChild(edit_toolbar);
 
-		var edit_toolbar = document.getElementById('edit_toolbar');
-		document.documentElement.appendChild(edit_toolbar);
+			var text_textarea = document.getElementById('text_textarea');
+			text_textarea.parentNode.removeChild(text_textarea);
 
-		var text_textarea = document.getElementById('text_textarea');
-		text_textarea.parentNode.removeChild(text_textarea);
+			var resize_interface = document.getElementById('resize_interface');
+			if (resize_interface) {
+				resize_interface.parentNode.removeChild(resize_interface);
+			}
 
-		state.is_editing = false;
-		state.edit_note_id = null;
-		state.edit_note_elem = null;
+			state.is_editing = false;
+			state.edit_note_id = null;
+			state.edit_note_elem = null;
+		}
+	},
+
+	'create_resize_note_interface': function() {
+		// Creates and returns a nice interface for resizing a Note.
+
+		// Deleting any old "#resize_interface" that might still exist
+		var resize_interface = document.getElementById('resize_interface');
+		if (resize_interface && resize_interface.parentNode) {
+			resize_interface.parentNode.removeChild(resize_interface);
+		}
+
+		resize_interface = document.createElement('div');
+		resize_interface.id = 'resize_interface';
+
+		var i;
+		for (i = 0; i < available_note_sizes.length; i++) {
+			var width = available_note_sizes[i][0];
+			var height = available_note_sizes[i][1];
+
+			var size = document.createElement('div');
+			size.classList.add('size');
+			size.style.width = width + 'px';
+			size.style.height = height + 'px';
+
+			// Inserting at the reverse order
+			//resize_interface.appendChild(size);
+			resize_interface.insertBefore(size, resize_interface.firstChild);
+
+			// TODO: attach event handlers
+		}
+
+		return resize_interface;
+	},
+
+	'add_resize_interface_to_note_being_edited': function() {
+		if (state.is_editing) {
+			var resize_interface = frontend.create_resize_note_interface();
+			console.log(state);
+			console.log(resize_interface);
+			state.edit_note_elem.appendChild(resize_interface);
+		}
 	}
 };
 
@@ -436,6 +491,10 @@ backend = {
 events = {
 	// These functions handle all UI events, and usually call other functions
 	// from the backend and frontend.
+
+	'resize_note_button_on_click': function(ev) {
+		frontend.add_resize_interface_to_note_being_edited();
+	},
 
 	'note_on_click': function(ev) {
 		if (this.classList.contains('being_edited')) {
@@ -635,6 +694,9 @@ events = {
 
 		var reload_button = document.getElementById('reload_button');
 		reload_button.addEventListener('click', backend.reload_notes_using_ajax, false);
+
+		var resize_note_button = document.getElementById('resize_note_button');
+		resize_note_button.addEventListener('click', events.resize_note_button_on_click, false);
 
 		var wall = document.getElementsByClassName('wall')[0];
 		wall.addEventListener('click', events.wall_on_click, false);

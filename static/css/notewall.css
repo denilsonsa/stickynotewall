@@ -32,6 +32,7 @@ input[type=number] {
 	text-decoration: underline;
 }
 
+
 .wall {
 	position: absolute;
 	top: 0;
@@ -44,6 +45,7 @@ input[type=number] {
 	/*border: 1px inset #DDDDDD;*/
 	overflow: auto;
 }
+
 
 #reload_button {
 	position: absolute;
@@ -62,6 +64,7 @@ input[type=number] {
 #reload_button:hover {
 	opacity: 1.0;
 }
+
 
 #trash_icon {
 	position: absolute;
@@ -114,6 +117,7 @@ input[type=number] {
 .note.being_dragged {
 	opacity: 0.5;
 }
+
 .note.being_edited {
 	overflow: visible;
 }
@@ -129,6 +133,8 @@ input[type=number] {
 	color: inherit;
 	background: transparent;
 }
+
+
 #edit_toolbar {
 	display: none;
 }
@@ -140,31 +146,55 @@ input[type=number] {
 	white-space: nowrap;
 }
 
+
+#resize_interface {
+	display: block;
+	position: absolute;
+	top: 0;
+	left: 0;
+
+	overflow: visible;
+}
+#resize_interface .size {
+	position: absolute;
+	top: 0;
+	left: 0;
+	margin-left: -1px;
+	margin-top: -1px;
+
+	background: transparent;
+	border: 1px dashed red;
+
+	cursor: se-resize;
+}
+#resize_interface .size:hover {
+	background: rgba(255, 255, 255, 127);
+	border-style: solid;
+}
+
+
+/* Different note colors/styles: */
 .note,  /* .yellow is the default color */
 .note.yellow {
 	background: #FFFF80;
 	border: 1px solid #EEEE00;
 	color: black;
 }
-
 .note.pink {
 	background: #FF80FF;
 	border: 1px solid #EE00EE;
 	color: black;
 }
-
 .note.red {
 	background: #FFA0A0;
 	border: 1px solid #EE8080;
 	color: black;
 }
-
 .note.green {
 	background: #A0FFA0;
 	border: 1px solid #80EE80;
 	color: black;
 }
-
 .note.blue {
 	background: #A0D0FF;
 	border: 1px solid #80A0EE;
