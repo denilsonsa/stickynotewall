@@ -460,7 +460,7 @@ events = {
 		backend.reload_notes_using_ajax();
 
 		// TODO: rename this to "refresh" button
-		var button = document.getElementById('load_from_ajax_button');
+		var button = document.getElementById('reload_button');
 		if (button) {
 			button.addEventListener('click', backend.reload_notes_using_ajax, false);
 		}

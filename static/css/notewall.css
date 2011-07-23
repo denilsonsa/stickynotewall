@@ -1,5 +1,10 @@
 @charset "UTF-8";
 
+html, body {
+	margin: 0;
+	padding: 0;
+}
+
 a img {
 	border: 0;
 }
@@ -8,13 +13,64 @@ input[type=number] {
 	width: 5em;
 }
 
+
+.logout {
+	position: absolute;
+	top: 0;
+	right: 0;
+	z-index: 10;
+	white-space: nowrap;
+
+	padding: 0.25em 0.5em;
+	font-family: sans-serif;
+}
+.logout a {
+	text-decoration: none;
+}
+.logout a:active,
+.logout a:hover {
+	text-decoration: underline;
+}
+
 .wall {
-	position: relative;
-	height: 300px;
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 0;
+
 	background: #EEEEEE;
-	border: 1px inset #DDDDDD;
+	/*border: 1px inset #DDDDDD;*/
 	overflow: auto;
 }
+
+#reload_button {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 10;
+
+	padding: 0;
+}
+#reload_button img,
+#reload_button object {
+	width: 32px;
+	height: 32px;
+}
+
+#trash_icon {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	z-index: 10;
+
+	width: 128px;
+	height: 128px;
+}
+
+
+/* All notes are inside .wall */
 
 .note {
 	position: absolute;
