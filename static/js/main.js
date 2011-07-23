@@ -125,6 +125,7 @@ frontend = {
 		note_div.style.zIndex = obj.z;
 
 		note_div.addEventListener('dragstart', events.note_on_dragstart, false);
+		note_div.addEventListener('dragend', events.note_on_dragend, false);
 
 		var text_div = document.createElement('p');
 		text_div.classList.add('text');
@@ -330,6 +331,9 @@ events = {
 		// element!
 		// ev.preventDefault();
 
+		document.documentElement.classList.add('there_is_a_note_being_dragged');
+		this.classList.add('note_being_dragged');
+
 		// (Re)building the Note object from the element
 		var note_obj = frontend.get_note_obj_from_note_element(this);
 
@@ -359,9 +363,38 @@ events = {
 		ev.dataTransfer.effectAllowed = 'copyMove';
 	},
 
+	'note_on_dragend': function(ev) {
+		document.documentElement.classList.remove('there_is_a_note_being_dragged');
+		this.classList.remove('note_being_dragged');
+	},
+
 	'note_on_dblclick': function(ev) {
 		ev.stopPropagation();
 	},
+
+
+	'trash_icon_on_dragenter': function(ev) {
+		this.classList.add('dragover');
+	},
+
+	'trash_icon_on_dragleave': function(ev) {
+		this.classList.remove('dragover');
+	},
+
+	'trash_icon_on_dragover': function(ev) {
+		// For now, let's just accept ANYTHING, and mark as "move" instead of
+		// "copy". This function might be smarter someday in future.
+
+		ev.dataTransfer.dropEffect = 'move';
+		ev.preventDefault();
+		ev.stopPropagation();
+	},
+
+	'trash_icon_on_drop': function(ev) {
+		// TODO: write me
+		this.classList.remove('dragover');
+	},
+
 
 	'wall_on_dragover': function(ev) {
 		// For now, let's just accept ANYTHING, and mark as "move" instead of
@@ -455,20 +488,24 @@ events = {
 		});
 	},
 
+
 	'window_on_load': function() {
 		// Loading the notes on page load:
 		backend.reload_notes_using_ajax();
 
-		// TODO: rename this to "refresh" button
-		var button = document.getElementById('reload_button');
-		if (button) {
-			button.addEventListener('click', backend.reload_notes_using_ajax, false);
-		}
+		var reload_button = document.getElementById('reload_button');
+		reload_button.addEventListener('click', backend.reload_notes_using_ajax, false);
 
 		var wall = document.getElementsByClassName('wall')[0];
 		wall.addEventListener('dragover', events.wall_on_dragover, false);
 		wall.addEventListener('drop', events.wall_on_drop, false);
 		wall.addEventListener('dblclick', events.wall_on_dblclick, false);
+
+		var trash_icon = document.getElementById('trash_icon');
+		trash_icon.addEventListener('dragenter', events.trash_icon_on_dragenter, false);
+		trash_icon.addEventListener('dragleave', events.trash_icon_on_dragleave, false);
+		trash_icon.addEventListener('dragover', events.trash_icon_on_dragover, false);
+		trash_icon.addEventListener('drop', events.trash_icon_on_drop, false);
 	}
 };
 

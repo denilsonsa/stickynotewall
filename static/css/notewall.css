@@ -52,11 +52,15 @@ input[type=number] {
 	z-index: 10;
 
 	padding: 0;
+	opacity: 0.5;
 }
 #reload_button img,
 #reload_button object {
-	width: 32px;
-	height: 32px;
+	width: 24px;
+	height: 24px;
+}
+#reload_button:hover {
+	opacity: 1.0;
 }
 
 #trash_icon {
@@ -65,8 +69,28 @@ input[type=number] {
 	right: 0;
 	z-index: 10;
 
-	width: 128px;
-	height: 128px;
+	width: 32px;
+	height: 32px;
+
+	background: url(../icons/edit-delete.svg) center center no-repeat;
+	background-size: 100% 100%;
+
+	transition-property: width, height;
+	transition-duration: 250ms;
+	-moz-transition-property: width, height;
+	-moz-transition-duration: 250ms;
+	-o-transition-property: width, height;
+	-o-transition-duration: 250ms;
+	-webkit-transition-property: width, height;
+	-webkit-transition-duration: 250ms;
+}
+.there_is_a_note_being_dragged #trash_icon {
+	width: 64px;
+	height: 64px;
+}
+.there_is_a_note_being_dragged #trash_icon.dragover {
+	width: 96px;
+	height: 96px;
 }
 
 
@@ -85,6 +109,10 @@ input[type=number] {
 .note p.text {
 	margin: 0;
 	white-space: pre-wrap;
+}
+
+.note.note_being_dragged {
+	opacity: 0.5;
 }
 
 .note,  /* .yellow is the default color */
