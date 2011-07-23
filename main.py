@@ -127,8 +127,7 @@ class GetNotes(BaseHandler):
 
 class AddNote(BaseHandler):
     def post(self):
-        '''Receives: text
-        Optionally receives: x,y,z,width,height
+        '''Optionally receives: text,x,y,z,width,height
         Returns: JSON representation of the new note.
 
         Creates a new note.
@@ -138,7 +137,7 @@ class AddNote(BaseHandler):
             parent=self.get_ancestor(),
             user=users.get_current_user(),
 
-            text=self.request.get('text'),
+            text=self.request.get('text', '<blank>'),
 
             x=int(self.request.get('x', 0)),
             y=int(self.request.get('y', 0)),
@@ -187,6 +186,10 @@ class MoveNote(BaseHandler):
         x = int(self.request.get('x'))
         y = int(self.request.get('y'))
         z = int(self.request.get('z'))
+
+        # Let's just avoid negative coordinates, okay?
+        x = max(0, x)
+        y = max(0, y)
 
         note = StickyNote.get_by_id(id, parent=self.get_ancestor())
 

@@ -28,7 +28,7 @@ input[type=number] {
 }
 .note p.text {
 	margin: 0;
-	white-space: pre;
+	white-space: pre-wrap;
 }
 
 .note,  /* .yellow is the default color */

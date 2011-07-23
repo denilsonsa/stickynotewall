@@ -74,11 +74,19 @@ function MouseEvent_coordinates_relative_to_element(ev, elem, internal_coordinat
 	return { 'x': x, 'y': y };
 }
 
+function notNone(value) {
+	// Returns true if value is not "null" and not "undefined".
+	// Just a little convenience function
+
+	return (value !== null) && (value !== undefined);
+}
+
 
 var NoteMIMEType = 'application/x-notewall.note+json';
 var has_chrome_issue_31037 = false;
 
 var frontend, backend, events;
+
 
 frontend = {
 	// Frontend functions care about HTML elements.
@@ -116,7 +124,7 @@ frontend = {
 		note_div.style.height = obj.height + 'px';
 		note_div.style.zIndex = obj.z;
 
-		note_div.addEventListener('dragstart', events.dragstart_note, false);
+		note_div.addEventListener('dragstart', events.note_on_dragstart, false);
 
 		var text_div = document.createElement('p');
 		text_div.classList.add('text');
@@ -216,9 +224,7 @@ frontend = {
 		}
 		return max;
 	}
-
 };
-
 
 
 backend = {
@@ -227,15 +233,24 @@ backend = {
 
 	// Using only one XHR object for reloading
 	'XHR_reload': null,
+	// Using only one XHR object for creating a note
+	'XHR_create': null,
+
+	'reuse_XHR': function(name) {
+		// Aborts an ongoing XHR, if it exists.
+		// Else, creates a new XHR with this name.
+
+		if (backend[name]) {
+			backend[name].abort();
+		} else {
+			backend[name] = new XMLHttpRequest();
+		}
+	},
 
 	'reload_notes_using_ajax': function() {
-		// Tries reloading all notes from server, using AJAX.
+		// Tries reloading all notes from server
 
-		if (backend.XHR_reload) {
-			backend.XHR_reload.abort();
-		} else {
-			backend.XHR_reload = new XMLHttpRequest();
-		}
+		backend.reuse_XHR('XHR_reload');
 
 		backend.XHR_reload.onreadystatechange = function() {
 			if (this.readyState === 4 && this.status === 200) {
@@ -251,12 +266,40 @@ backend = {
 		backend.XHR_reload.send();
 	},
 
+	'create_new_note_using_ajax': function(note_obj) {
+		// Creates a new Note at the desired position.
+		// If text is null, use some pre-defined text.
+
+		var formdata = new FormData();
+		if(notNone(note_obj.text))   formdata.append('text',   note_obj.text);
+		if(notNone(note_obj.x))      formdata.append('x',      note_obj.x);
+		if(notNone(note_obj.y))      formdata.append('y',      note_obj.y);
+		if(notNone(note_obj.z))      formdata.append('z',      note_obj.z);
+		if(notNone(note_obj.width))  formdata.append('width',  note_obj.width);
+		if(notNone(note_obj.height)) formdata.append('height', note_obj.height);
+
+		backend.reuse_XHR('XHR_create');
+
+		backend.XHR_create.onreadystatechange = function() {
+			if (this.readyState === 4 && this.status === 200) {
+				var json_obj = JSON.parse(this.responseText);
+				frontend.add_or_update_note(json_obj);
+			}
+			// else... do nothing
+		};
+
+		backend.XHR_create.open('POST', '/ajax/add_note');
+		backend.XHR_create.send(formdata);
+	},
+
 	'move_note_using_ajax': function(id, x, y, z) {
 		// Moves a note using AJAX, and updates the note position.
 
+		// I believe it's better to not reuse XHR for this function.
+		// Am I right?
 		var XHR = new XMLHttpRequest();
-		var formdata = new FormData();
 
+		var formdata = new FormData();
 		formdata.append('id', id);
 		formdata.append('x', x);
 		formdata.append('y', y);
@@ -273,16 +316,19 @@ backend = {
 		XHR.open('POST', '/ajax/move_note');
 		XHR.send(formdata);
 	}
-
 };
+
 
 events = {
 	// These functions handle all UI events, and usually call other functions
 	// from the backend and frontend.
 
-	'dragstart_note': function(ev) {
-		//console.log("dragstart", this, ev);
+	'note_on_dragstart': function(ev) {
 		ev.stopPropagation(); // not really needed, but it makes sense here.
+
+		// If preventDefault() is added, the user won't be able to drag the
+		// element!
+		// ev.preventDefault();
 
 		// (Re)building the Note object from the element
 		var note_obj = frontend.get_note_obj_from_note_element(this);
@@ -313,7 +359,11 @@ events = {
 		ev.dataTransfer.effectAllowed = 'copyMove';
 	},
 
-	'dragover_wall': function(ev) {
+	'note_on_dblclick': function(ev) {
+		ev.stopPropagation();
+	},
+
+	'wall_on_dragover': function(ev) {
 		// For now, let's just accept ANYTHING, and mark as "move" instead of
 		// "copy". This function might be smarter someday in future.
 
@@ -328,7 +378,7 @@ events = {
 		ev.stopPropagation();
 	},
 
-	'drop_wall': function(ev) {
+	'wall_on_drop': function(ev) {
 		// Only one of stopPropagation() or preventDefault() is actually needed
 		ev.stopPropagation();
 		ev.preventDefault();
@@ -369,31 +419,58 @@ events = {
 			// Let's fall back to creating a note with the dropped text
 			var text = ev.dataTransfer.getData('text/plain');
 			if (text) {
-				// TODO: write me!
-				console.log('It is just text', text);
+				var width = 50;
+				var height = 50;
+				var x = Math.round(coords.x - width/2);
+				var y = Math.round(coords.y - width/2);
+
+				backend.create_new_note_using_ajax({
+					'text': text,
+					'x': x,
+					'y': y,
+					'z': frontend.get_max_note_zIndex(),
+					'width': width,
+					'height': height
+				});
 			}
 		}
 	},
 
+	'wall_on_dblclick': function(ev) {
+		ev.stopPropagation();
 
-	'on_load_handler': function() {
+		var coords = MouseEvent_coordinates_relative_to_element(ev, this, true);
+
+		var width = 50;
+		var height = 50;
+		var x = Math.round(coords.x - width/2);
+		var y = Math.round(coords.y - width/2);
+
+		backend.create_new_note_using_ajax({
+			'x': x,
+			'y': y,
+			'z': frontend.get_max_note_zIndex(),
+			'width': width,
+			'height': height
+		});
+	},
+
+	'window_on_load': function() {
+		// Loading the notes on page load:
+		backend.reload_notes_using_ajax();
+
+		// TODO: rename this to "refresh" button
 		var button = document.getElementById('load_from_ajax_button');
 		if (button) {
 			button.addEventListener('click', backend.reload_notes_using_ajax, false);
 		}
 
-		button = document.getElementById('clear_wall');
-		if (button) {
-			button.addEventListener('click', frontend.clear_wall, false);
-		}
-
-
-
 		var wall = document.getElementsByClassName('wall')[0];
-		wall.addEventListener('dragover', events.dragover_wall, false);
-		wall.addEventListener('drop', events.drop_wall, false);
+		wall.addEventListener('dragover', events.wall_on_dragover, false);
+		wall.addEventListener('drop', events.wall_on_drop, false);
+		wall.addEventListener('dblclick', events.wall_on_dblclick, false);
 	}
-
 };
 
-window.addEventListener('load', events.on_load_handler, false);
+
+window.addEventListener('load', events.window_on_load, false);
