@@ -145,7 +145,7 @@ class AddNote(BaseHandler):
             parent=self.get_ancestor(),
             user=users.get_current_user(),
 
-            text=self.request.get('text', '<blank>'),
+            text=self.request.get('text', ''),
 
             x=int(self.request.get('x', 0)),
             y=int(self.request.get('y', 0)),
