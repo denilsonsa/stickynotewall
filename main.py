@@ -118,7 +118,7 @@ class MainPage(BaseHandler):
             'user': users.get_current_user(),
             'logout_url': self.logout_url,
         }
-        path = get_path('templates', 'index.html')
+        path = get_path('templates', 'wall.html')
 
         self.response.out.write(template.render(path, template_values))
 
