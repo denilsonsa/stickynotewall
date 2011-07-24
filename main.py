@@ -260,8 +260,11 @@ application = webapp.WSGIApplication(
 # This "profile_main()" function has been copied from
 # http://code.google.com/appengine/kb/commontasks.html#profiling
 def profile_main():
+    import logging
+    logging.getLogger().setLevel(logging.DEBUG)
+
     # This is the main function for profiling
-    import cProfile, logging, pstats, StringIO
+    import cProfile, pstats, StringIO
     prof = cProfile.Profile()
     prof = prof.runctx("main()", globals(), locals())
     stream = StringIO.StringIO()
