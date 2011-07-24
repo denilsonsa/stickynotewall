@@ -257,8 +257,26 @@ application = webapp.WSGIApplication(
 )
 
 
+# This "profile_main()" function has been copied from
+# http://code.google.com/appengine/kb/commontasks.html#profiling
+def profile_main():
+    # This is the main function for profiling
+    import cProfile, logging, pstats, StringIO
+    prof = cProfile.Profile()
+    prof = prof.runctx("main()", globals(), locals())
+    stream = StringIO.StringIO()
+    stats = pstats.Stats(prof, stream=stream)
+    stats.sort_stats("time")  # Or cumulative
+    stats.print_stats(80)  # 80 = how many to print
+    # The rest is optional.
+    # stats.print_callees()
+    # stats.print_callers()
+    logging.info("Profile data:\n%s", stream.getvalue())
+
+
 def main():
     run_wsgi_app(application)
 
 if __name__ == '__main__':
-    main()
+    profile_main()
+    #main()
