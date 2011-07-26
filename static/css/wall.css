@@ -120,6 +120,8 @@ a img {
 
 .note.being_edited {
 	overflow: visible;
+	/* "resize" only works if "overflow" is something other than "visible" */
+	/* resize: both; */
 }
 .note.being_edited p.text {
 	display: none;
@@ -129,9 +131,16 @@ a img {
 	height: 100%;
 	box-sizing: border-box;
 
+	margin: 0;
+	border: 0;
+	padding: 0;
+
 	font: inherit;
 	color: inherit;
 	background: transparent;
+
+	resize: none;
+	overflow: hidden;
 }
 
 
