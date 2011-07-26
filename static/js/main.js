@@ -256,6 +256,8 @@ frontend = {
 
 		note_elem.classList.add('being_edited');
 
+		note_elem.style.zIndex = 1 + frontend.get_max_note_zIndex();
+
 		var edit_toolbar = document.getElementById('edit_toolbar');
 		note_elem.appendChild(edit_toolbar);
 
