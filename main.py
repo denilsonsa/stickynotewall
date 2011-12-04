@@ -168,7 +168,12 @@ class AddNote(BaseHandler):
         for attr in integer_properties:
             value = self.request.get(attr, None)
             if value is not None:
-                d[attr] = int(value)
+                # Converting string to integer...
+                value = int(value)
+                # Let's just avoid negative coordinates, okay?
+                value = max(0, value)
+
+                d[attr] = value
 
         note = StickyNote(
             parent=self.get_ancestor(),
