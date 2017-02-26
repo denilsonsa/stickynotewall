@@ -4,18 +4,12 @@
 
 import datetime
 import os.path
-
-try:
-    import json
-except ImportError:
-    import simplejson as json
+import json
 
 from google.appengine.ext import db
 from google.appengine.api import users
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp import template
-from google.appengine.ext.webapp.util import run_wsgi_app
-from google.appengine.ext.webapp.util import login_required
+import webapp2
+from jinja2 import Environment, FileSystemLoader
 
 
 class ExtensibleJSONEncoder(json.JSONEncoder):
@@ -50,12 +44,6 @@ class ExtensibleJSONEncoder(json.JSONEncoder):
 
         # Fallback
         return json.JSONEncoder.default(self, obj)
-
-
-def get_path(*args):
-    '''Convenience function to return the actual path for some file.'''
-
-    return os.path.join(os.path.dirname(__file__), *args)
 
 
 #class User(db.Model):
@@ -95,7 +83,7 @@ class StickyNote(db.Model):
         return d
 
 
-class BaseHandler(webapp.RequestHandler):
+class BaseHandler(webapp2.RequestHandler):
     def return_json(self, obj):
         '''Convenience function that generates and writes JSON output.'''
 
@@ -120,22 +108,22 @@ class IndexPage(BaseHandler):
                 'user': user,
                 'logout_url': users.create_logout_url(self.request.uri),
             }
-            path = get_path('templates', 'wall.html')
-            self.response.out.write(template.render(path, template_values))
+            template = env.get_template('wall.html')
+            self.response.out.write(template.render(template_values))
         else:
             template_values = {
                 'login_url': users.create_login_url(self.request.uri),
             }
-            path = get_path('templates', 'index.html')
-            self.response.out.write(template.render(path, template_values))
+            template = env.get_template('index.html')
+            self.response.out.write(template.render(template_values))
 
 
 class DocumentationPage(BaseHandler):
     def get(self):
         template_values = {
         }
-        path = get_path('templates', 'help.html')
-        self.response.out.write(template.render(path, template_values))
+        template = env.get_template('help.html')
+        self.response.out.write(template.render(template_values))
 
 
 class GetNotes(BaseHandler):
@@ -201,7 +189,8 @@ class DeleteNote(BaseHandler):
             self.error(404)
             return
         elif note.user != users.get_current_user():
-            self.error(403)
+            #self.error(403)
+            self.error(404)
             return
 
         note.delete()
@@ -224,7 +213,8 @@ class EditNote(BaseHandler):
             self.error(404)
             return
         elif note.user != users.get_current_user():
-            self.error(403)
+            #self.error(403)
+            self.error(404)
             return
 
         string_properties = ['text', 'color']
@@ -249,7 +239,7 @@ class EditNote(BaseHandler):
         self.return_json(note)
 
 
-application = webapp.WSGIApplication(
+app = webapp2.WSGIApplication(
     [
         ('/', IndexPage),
         ('/help', DocumentationPage),
@@ -261,30 +251,7 @@ application = webapp.WSGIApplication(
     debug=True
 )
 
-
-# This "profile_main()" function has been copied from
-# http://code.google.com/appengine/kb/commontasks.html#profiling
-def profile_main():
-    import logging
-    logging.getLogger().setLevel(logging.DEBUG)
-
-    # This is the main function for profiling
-    import cProfile, pstats, StringIO
-    prof = cProfile.Profile()
-    prof = prof.runctx("main()", globals(), locals())
-    stream = StringIO.StringIO()
-    stats = pstats.Stats(prof, stream=stream)
-    stats.sort_stats("time")  # Or cumulative
-    stats.print_stats(80)  # 80 = how many to print
-    # The rest is optional.
-    # stats.print_callees()
-    # stats.print_callers()
-    logging.info("Profile data:\n%s", stream.getvalue())
-
-
-def main():
-    run_wsgi_app(application)
-
-if __name__ == '__main__':
-    profile_main()
-    #main()
+env = Environment(
+    loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')),
+    autoescape=lambda name: True if name and name.endswith('html') else False
+)

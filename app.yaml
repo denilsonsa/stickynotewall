@@ -1,10 +1,6 @@
-# The application name:
-application: stickynotewall
-# The application version:
-version: 1
-# The runtime environment and version:
-runtime: python
+runtime: python27
 api_version: 1
+threadsafe: true
 
 handlers:
 
@@ -24,22 +20,26 @@ handlers:
 
 # Homepage and help page:
 - url: /
-  script: main.py
+  script: main.app
   secure: always
 
 - url: /help
-  script: main.py
+  script: main.app
   secure: always
 
 # Everything else must be secure and authenticated
 - url: /.*
-  script: main.py
+  script: main.app
   secure: always
   login: required
 
 
 # http://code.google.com/appengine/docs/python/config/appconfig.html#Builtin_Handlers
 builtins:
-- datastore_admin: on
+#- datastore_admin: on
 - appstats: on
 - admin_redirect: on
+
+libraries:
+- name: jinja2
+  version: 2.6
