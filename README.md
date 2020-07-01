@@ -1,0 +1,1 @@
+"Sticky Note Wall" is a "Google App Engine" web application I've developed using Python and modern web technologies (HTML5, JavaScript, DOM, CSS3). It's like a virtual wall of sticky notes (post-it notes). It's hosted on https://stickynotewall.appspot.com/
